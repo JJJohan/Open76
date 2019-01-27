@@ -127,12 +127,12 @@ struct ORDF
     float Unknown3;
     uint Unknown4;
     char Unknown5[13];
-    char Unknown6[13];
-    char Unknown7[13];
-    char Unknown8[13];
-    char Unknown9[13];
-    char SoundName1[13];
-    char SoundName2[13];
+    char GroundHitEffect[13];
+    char GRoundHitSound[13];
+    char CarHitEffect[13];
+    char CarHitSound[13];
+    char BuildingHitEffect[13];
+    char BuildingHitSound[13];
     char Unknown10[13];
     char Unknown11[13];
 };

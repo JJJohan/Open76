@@ -161,15 +161,14 @@ namespace Assets.Scripts.System
 
         private Material GetMaterial(GeoFace geoFace, Vtf vtf, int textureGroup, int frame)
         {
-            string textureName = geoFace.TextureName;
-            if (frame > 0)
+            if (geoFace.TextureName != null)
             {
-                textureName = textureName.Substring(0, textureName.Length - 2) + $"{frame + 1:00}";
-            }
+                string textureName = Path.GetFileNameWithoutExtension(geoFace.TextureName);
+                if (frame > 0)
+                {
+                    textureName = textureName.Substring(0, textureName.Length - 2) + $"{frame + 1:00}";
+                }
 
-            if (textureName != null)
-            {
-                textureName = Path.GetFileNameWithoutExtension(textureName);
                 if (vtf != null && textureName[0] == 'V')
                 {
                     if (textureName.EndsWithFast("BO DY"))

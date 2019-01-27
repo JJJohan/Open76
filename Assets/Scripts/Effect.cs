@@ -2,7 +2,7 @@
 using Assets.Scripts.System.Fileparsers;
 using UnityEngine;
 
-namespace Assets.Scripts.System
+namespace Assets.Scripts
 {
     public class Effect : MonoBehaviour
     {
@@ -22,6 +22,7 @@ namespace Assets.Scripts.System
         private int _effectCount;
 
         public bool Loop { get; set; } // Only used for debugging / XDF viewer scene.
+        public bool AutoDestroy { get; set; }
 
         private void Awake()
         {
@@ -79,7 +80,14 @@ namespace Assets.Scripts.System
             }
             else if (_frameIndex == _frameCount)
             {
-                gameObject.SetActive(false);
+                if (AutoDestroy)
+                {
+                    Destroy(gameObject);
+                }
+                else
+                {
+                    gameObject.SetActive(false);
+                }
             }
         }
     }

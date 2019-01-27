@@ -174,9 +174,8 @@ namespace Assets.Scripts.CarSystems
         {
             GameObject projObj = Object.Instantiate(weapon.ProjectilePrefab, weapon.Transform.position, weapon.Transform.rotation);
             Projectile projectile = projObj.GetComponent<Projectile>();
-            projectile.Velocity = weapon.Gdf.BulletVelocity;
-            projectile.Damage = weapon.Gdf.Damage;
             projectile.Owner = _car;
+            projectile.Gdf = weapon.Gdf;
             projObj.SetActive(true);
 
             weapon.LastFireTime = Time.time;

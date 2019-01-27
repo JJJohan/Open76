@@ -23,6 +23,12 @@ namespace Assets.Scripts.System.Fileparsers
         public GeometryDefinition[] InsideParts { get; set; }
         public GeometryDefinition[] TurretParts { get; set; }
         public GeometryDefinition Projectile { get; set; }
+        public string ImpactSoundBuilding { get; set; }
+        public string ImpactEffectBuilding { get; set; }
+        public string ImpactSoundCar { get; set; }
+        public string ImpactEffectCar { get; set; }
+        public string ImpactSoundGround { get; set; }
+        public string ImpactEffectGround { get; set; }
     }
     
     public class GdfParser
@@ -164,7 +170,16 @@ namespace Assets.Scripts.System.Fileparsers
                 }
 
                 br.FindNext("ORDF"); // 133 bytes
-
+                br.ReadInt32();
+                br.ReadSingle();
+                br.ReadSingle();
+                br.ReadInt32();
+                gdf.ImpactEffectGround = br.ReadCString(13);
+                gdf.ImpactSoundGround = br.ReadCString(13);
+                gdf.ImpactEffectCar = br.ReadCString(13);
+                gdf.ImpactSoundCar = br.ReadCString(13);
+                gdf.ImpactEffectBuilding = br.ReadCString(13);
+                gdf.ImpactSoundBuilding = br.ReadCString(13);
 
                 br.FindNext("OGEO"); // 104 bytes
 
