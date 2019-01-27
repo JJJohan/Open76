@@ -1,0 +1,69 @@
+//------------------------------------------------
+//--- 010 Editor v2.0 Binary Template
+//
+//      File: BWD2
+//    Author: Johan Rensenbrink
+//   Version: 1.0
+//   Purpose: Parse BWD2 header for Interstate 76.
+//  Category: Data
+// File Mask: *.*df
+//  ID Bytes: 42 57 44 32
+//   History:  
+//   1.0   Initial release.
+//------------------------------------------------
+
+struct Vector3
+{
+    float X;
+    float Y;
+    float Z;
+};
+
+struct BWD2
+{
+    char ID[4];
+    int  Version;
+};
+
+struct TAG
+{
+    char Name[4];
+    uint Size;
+};
+
+struct REV
+{
+    SetBackColor(cLtYellow);
+    TAG Tag;
+    SetBackColor(cLtGreen);
+    uint Revision;
+};
+
+struct UNKNOWN
+{
+    SetBackColor(cLtYellow);
+    TAG Tag;
+    SetBackColor(cRed);
+    char Data[Tag.Size - 8];
+};
+
+struct EXIT
+{
+    SetBackColor(cLtYellow);
+    TAG Tag;
+};
+
+// Define the header
+LittleEndian(); 
+SetBackColor(cLtPurple);
+BWD2 header;
+
+// Check for valid header
+if(header.ID != "BWD2")
+{
+    Warning( "File is not a BWD2 file. Template stopped." );
+    return -1;
+}
+
+// Read revision tag
+REV rev;

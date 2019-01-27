@@ -1,0 +1,94 @@
+//------------------------------------------------
+//--- 010 Editor v2.0 Binary Template
+//
+//      File: XDF
+//    Author: Johan Rensenbrink
+//   Version: 1.0
+//   Purpose: Parse XDF (Effect Data File) for Interstate 76.
+//  Category: Data
+// File Mask: *.xdf
+//  ID Bytes: 42 57 44 32
+//   History:  
+//   1.0   Initial release.
+//------------------------------------------------
+
+#include "BWD2.bt"
+
+struct XDFC
+{
+    SetBackColor(cLtYellow);
+    TAG Tag;
+    SetBackColor(cLtGreen);
+    uint Frames;
+    float FrameRate;
+    float LifeTime;
+    SetBackColor(cRed);
+    char Unknown4[12];
+    SetBackColor(cLtRed);
+    float Unknown5;
+    float Unknown6;
+    float Unknown7;
+    uint Unknown8;    
+};
+
+struct XGEO
+{
+    struct XGEO_LOD
+    {
+        SetBackColor(cLtGreen);
+        char Name[8];
+        Vector3 Right;
+        Vector3 Up;
+        Vector3 Forward;
+        Vector3 Position;
+        char Parent[8];
+
+        SetBackColor(cLtRed);
+        float Unknown1;
+        float Unknown2;
+        float Unknown3;
+        float Unknown4;
+        float Unknown5;
+        float Unknown6;
+        float Unknown7;
+        uint Unknown8;
+        uint Unknown9;
+    };
+
+    SetBackColor(cLtYellow);
+    TAG Tag;
+    SetBackColor(cLtGreen);
+    uint PartCount;
+    XGEO_LOD Lod0[PartCount];
+    XGEO_LOD Lod1[PartCount];
+    XGEO_LOD Lod2[PartCount];
+};
+
+// Read other tags
+local char tag[4];
+local uint size;
+while(!FEof())
+{
+    // Read tag header
+    ReadBytes(tag, FTell(), 4);
+    
+    switch(tag)
+    {
+        case "XDFC":
+            XDFC xdfc;
+            break;
+        case "XGEO":
+            XGEO xgeo;
+            break;
+        case "EXIT":
+            EXIT exit;
+            break;
+        default:
+            size = ReadUInt(FTell() + 4);
+            Printf( "Encountered unknown chunk '%s' of size %d at position %Ld.\n", tag, size, FTell() );
+
+            SetBackColor(cNone);
+            UNKNOWN unknown;
+            break;
+    }
+}
