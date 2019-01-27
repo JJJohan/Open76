@@ -38,6 +38,12 @@ namespace Assets.Scripts.System
             DestroyAudioClip();
         }
 
+        public void KillRadioMessages()
+        {
+            Stop();
+            _radioMessageQueue.Clear();
+        }
+
         private void DestroyAudioClip()
         {
             _currentOwner = null;

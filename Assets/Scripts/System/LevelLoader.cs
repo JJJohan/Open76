@@ -126,6 +126,10 @@ namespace Assets.Scripts.System
                                     Car car = go.GetComponent<Car>();
                                     car.TeamId = odef.TeamId;
                                     car.IsPlayer = odef.IsPlayer;
+                                    if (car.IsPlayer)
+                                    {
+                                        Car.Player = car;
+                                    }
                                     break;
                             }
 

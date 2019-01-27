@@ -23,7 +23,7 @@ namespace Assets.Scripts.Entities
             _wreckedObject = wreckedObject;
         }
 
-        public override void ApplyDamage(DamageType damageType, Vector3 hitNormal, int damage)
+        public override void ApplyDamage(DamageType damageType, Vector3 hitNormal, int damage, Car attacker)
         {
             bool alive = Alive;
             _health -= damage;

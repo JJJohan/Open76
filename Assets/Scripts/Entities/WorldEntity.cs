@@ -8,7 +8,7 @@ namespace Assets.Scripts.Entities
         public abstract bool Alive { get; }
         public int MaxAttackers { get; set; }
 
-        public virtual void ApplyDamage(DamageType damageType, Vector3 hitNormal, int damage)
+        public virtual void ApplyDamage(DamageType damageType, Vector3 hitNormal, int damage, Car attacker)
         {
         }
     }

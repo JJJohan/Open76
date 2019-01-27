@@ -176,7 +176,7 @@ namespace Assets.Scripts.CarSystems
             Projectile projectile = projObj.GetComponent<Projectile>();
             projectile.Velocity = weapon.Gdf.BulletVelocity;
             projectile.Damage = weapon.Gdf.Damage;
-            projectile.Owner = _car.transform;
+            projectile.Owner = _car;
             projObj.SetActive(true);
 
             weapon.LastFireTime = Time.time;

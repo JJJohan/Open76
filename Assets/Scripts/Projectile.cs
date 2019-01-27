@@ -7,7 +7,7 @@ namespace Assets.Scripts
     {
         public float Velocity { get; set; }
         public float Damage { get; set; }
-        public Transform Owner { get; set; }
+        public Car Owner { get; set; }
 
         private const float MaxLifeTime = 10.0f;
 
@@ -35,13 +35,13 @@ namespace Assets.Scripts
             if (entity != null)
             {
                 Transform entityTransform = entity.transform;
-                if (entityTransform == Owner)
+                if (entityTransform == Owner.transform)
                 {
                     return;
                 }
 
                 Vector3 hitNormal = (entityTransform.position - transform.position).normalized;
-                entity.ApplyDamage(DamageType.Projectile, hitNormal, (int)Damage);
+                entity.ApplyDamage(DamageType.Projectile, hitNormal, (int)Damage, Owner);
             }
 
             // TODO: Spawn impact sprite.

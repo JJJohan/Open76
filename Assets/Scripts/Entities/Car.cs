@@ -44,10 +44,14 @@ namespace Assets.Scripts.Entities
         private int[] _vehicleHitPoints;
         private int[] _vehicleStartHitPoints;
 
+        public static Car Player { get; set; }
+
         public bool EngineRunning { get; private set; }
         public bool Arrived { get; set; }
         public Vdf Vdf { get; private set; }
         public Vcf Vcf { get; private set; }
+        public bool GroovesFault { get; private set; }
+        public int Attacker { get; private set; }
 
         public override bool Alive
         {
@@ -109,6 +113,11 @@ namespace Assets.Scripts.Entities
                 SetHealthGroup(GetHealthGroup(system));
                 if (value <= 0)
                 {
+                    if (Attacker == Player.Id)
+                    {
+                        GroovesFault = true;
+                    }
+
                     Explode();
                 }
             }
@@ -160,11 +169,14 @@ namespace Assets.Scripts.Entities
             return system;
         }
 
-        public override void ApplyDamage(DamageType damageType, Vector3 normal, int damageAmount)
+        public override void ApplyDamage(DamageType damageType, Vector3 normal, int damageAmount, Car attacker)
         {
             float angle = Quaternion.FromToRotation(Vector3.up, normal).eulerAngles.z;
 
             // TODO: Figure out how tire damage should be applied here.
+
+            Attacked = true;
+            Attacker = attacker.Id;
 
             SystemType system;
             switch (damageType)

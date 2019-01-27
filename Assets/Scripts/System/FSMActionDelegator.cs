@@ -1,6 +1,8 @@
-﻿using Assets.Scripts.Camera;
+﻿using System.Collections.Generic;
+using Assets.Scripts.Camera;
 using Assets.Scripts.Entities;
 using UnityEngine;
+using Car = Assets.Scripts.Entities.Car;
 
 namespace Assets.Scripts.System
 {
@@ -13,7 +15,7 @@ namespace Assets.Scripts.System
 
         public int DoAction(string actionName, StackMachine machine, FSMRunner fsmRunner)
         {
-            global::System.Collections.Generic.Queue<IntRef> args = machine.ArgumentQueue;
+            Queue<IntRef> args = machine.ArgumentQueue;
             switch (actionName)
             {
                 case "null":
@@ -64,6 +66,16 @@ namespace Assets.Scripts.System
                     bool equal = val.Value == number.Value;
                     return equal ? 1 : 0;
                 }
+                case "isEqualId":
+                    {
+                        IntRef entityIndex1 = args.Dequeue();
+                        IntRef entityIndex2 = args.Dequeue();
+                        FSMEntity entity1 = fsmRunner.FSM.EntityTable[entityIndex1.Value];
+                        FSMEntity entity2 = fsmRunner.FSM.EntityTable[entityIndex2.Value];
+
+                        bool equal = entity1.Id == entity2.Id;
+                        return equal ? 1 : 0;
+                    }
                 case "pushCam":
                     CameraManager.Instance.PushCamera();
                     break;
@@ -160,7 +172,7 @@ namespace Assets.Scripts.System
                         FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
                         FSMPath path = fsmRunner.FSM.Paths[pathIndex];
 
-                        Car car = entity.Object.GetComponent<Car>();
+                        Car car = entity.WorldEntity as Car;
                         if (car != null)
                         {
                             car.SetTargetPath(path, targetSpeed);
@@ -179,7 +191,7 @@ namespace Assets.Scripts.System
                         FSMPath path = fsmRunner.FSM.Paths[pathIndex];
                         FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
                             
-                        Car car = entity.Object.GetComponent<Car>();
+                        Car car = entity.WorldEntity as Car;
                         if (car != null)
                         {
                             bool within = car.IsWithinNav(path, distance);
@@ -198,7 +210,7 @@ namespace Assets.Scripts.System
                         FSMPath path = fsmRunner.FSM.Paths[pathIndex];
                         FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
 
-                        Car car = entity.Object.GetComponent<Car>();
+                        Car car = entity.WorldEntity as Car;
                         if (car != null)
                         {
                             bool within = car.IsWithinNav(path, (int)Mathf.Sqrt(distance));
@@ -220,8 +232,8 @@ namespace Assets.Scripts.System
                         FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
                         FSMEntity targetEntity = fsmRunner.FSM.EntityTable[targetIndex];
 
-                        Car car = entity.Object.GetComponent<Car>();
-                        Car targetCar = targetEntity.Object.GetComponent<Car>();
+                        Car car = entity.WorldEntity as Car;
+                        Car targetCar = targetEntity.WorldEntity as Car;
                         if (car != null && targetCar != null)
                         {
                             car.SetFollowTarget(targetCar, xOffset, targetSpeed);
@@ -236,7 +248,7 @@ namespace Assets.Scripts.System
                         int entityIndex = args.Dequeue().Value;
                         FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
 
-                        Car car = entity.Object.GetComponent<Car>();
+                        Car car = entity.WorldEntity as Car;
                         if (car != null)
                         {
                             bool atFollow = car.AtFollowTarget();
@@ -261,7 +273,7 @@ namespace Assets.Scripts.System
                         nodePos.y = Utils.GroundHeightAtPoint(nodePos.x, nodePos.z) + height * 0.01f;
                         entity.Object.transform.position = nodePos;
 
-                        Car car = entity.Object.GetComponent<Car>();
+                        Car car = entity.WorldEntity as Car;
                         if (car != null)
                         {
                             car.SetSpeed(targetSpeed);
@@ -298,7 +310,7 @@ namespace Assets.Scripts.System
                         int entityIndex = args.Dequeue().Value;
                         FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
 
-                        Car car = entity.Object.GetComponent<Car>();
+                        Car car = entity.WorldEntity as Car;
                         if (car != null)
                         {
                             car.Sit();
@@ -316,7 +328,7 @@ namespace Assets.Scripts.System
                         FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
                         FSMEntity avoidEntity = fsmRunner.FSM.EntityTable[avoidIndex];
 
-                        Car car = entity.Object.GetComponent<Car>();
+                        Car car = entity.WorldEntity as Car;
                         WorldEntity target = avoidEntity.WorldEntity;
                         if (car != null && target != null)
                         {
@@ -350,7 +362,7 @@ namespace Assets.Scripts.System
                         int skill2 = args.Dequeue().Value;
 
                         FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
-                        Car car = entity.Object.GetComponent<Car>();
+                        Car car = entity.WorldEntity as Car;
                         if (car != null)
                         {
                             car.Skill1 = skill1;
@@ -367,7 +379,7 @@ namespace Assets.Scripts.System
                         int aggressionValue = args.Dequeue().Value;
 
                         FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
-                        Car car = entity.Object.GetComponent<Car>();
+                        Car car = entity.WorldEntity as Car;
                         if (car != null)
                         {
                             car.Aggressiveness = aggressionValue;
@@ -382,10 +394,25 @@ namespace Assets.Scripts.System
                         int entityIndex = args.Dequeue().Value;
 
                         FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
-                        Car car = entity.Object.GetComponent<Car>();
+                        Car car = entity.WorldEntity as Car;
                         if (car != null)
                         {
                             return car.Attacked ? 1 : 0;
+                        }
+
+                        LogUnhandledEntity(actionName, entityIndex, entity, machine);
+                    }
+                    break;
+                case "whoAttacked":
+                    {
+                        int entityIndex = args.Dequeue().Value;
+                        IntRef attacker = args.Dequeue();
+                        FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
+                        Car car = entity.WorldEntity as Car;
+                        if (car != null)
+                        {
+                            attacker.Value = car.Attacker;
+                            break;
                         }
 
                         LogUnhandledEntity(actionName, entityIndex, entity, machine);
@@ -431,6 +458,9 @@ namespace Assets.Scripts.System
                         QueueRadio(fsmRunner, soundId, queueFlag, -1);
                     }
                     break;
+                case "killCB":
+                    RadioManager.Instance.KillRadioMessages();
+                    break;
                 case "rand":
                     {
                         IntRef arg = args.Dequeue();
@@ -444,6 +474,19 @@ namespace Assets.Scripts.System
                 case "isCBEmpty":
                     {
                         return RadioManager.Instance.IsQueueEmpty() ? 1 : 0;
+                    }
+                case "isGroovesFault":
+                    {
+                        int entityIndex = args.Dequeue().Value;
+                        FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
+                        Car car = entity.WorldEntity as Car;
+                        if (car != null)
+                        {
+                            return car.GroovesFault ? 1 : 0;
+                        }
+
+                        LogUnhandledEntity(actionName, entityIndex, entity, machine);
+                        return 0;
                     }
                 case "startTimer":
                     int timerIndex = args.Dequeue().Value;
