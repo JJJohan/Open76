@@ -76,8 +76,8 @@ namespace Assets.Scripts.System.Fileparsers
         public uint VehicleSize { get; set; }
         public float LODDistance1 { get; set; }
         public uint Unk4 { get; set; }
-        public List<SdfPart[]> PartsThirdPerson { get; set; }
-        public SdfPart[] PartsFirstPerson { get; set; }
+        public List<GeometryDefinition[]> PartsThirdPerson { get; set; }
+        public GeometryDefinition[] PartsFirstPerson { get; set; }
         public Bounds BoundsInner { get; internal set; }
         public Bounds BoundsOuter { get; internal set; }
         public WheelLoc[] WheelLoc { get; set; }
@@ -135,40 +135,24 @@ namespace Assets.Scripts.System.Fileparsers
                 
                 br.FindNext("VGEO");
                 uint numParts = br.ReadUInt32();
-                vdf.PartsThirdPerson = new List<SdfPart[]>(4);
+                vdf.PartsThirdPerson = new List<GeometryDefinition[]>(4);
                 for (int damageState = 0; damageState < 4; damageState++)
                 {
-                    SdfPart[] parts = new SdfPart[numParts];
+                    GeometryDefinition[] parts = new GeometryDefinition[numParts];
                     for (int i = 0; i < numParts; i++)
                     {
-                        SdfPart sdfPart = new SdfPart();
-                        sdfPart.Name = br.ReadCString(8);
-                        sdfPart.Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-                        sdfPart.Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-                        sdfPart.Forward = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-                        sdfPart.Position = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-                        sdfPart.ParentName = br.ReadCString(8);
+                        parts[i] = GeometryDefinition.Read(br);
                         br.Position += 36;
-
-                        parts[i] = sdfPart;
                     }
                     vdf.PartsThirdPerson.Add(parts);
                 }
                 br.Position += 100 * numParts * 12;
 
-                vdf.PartsFirstPerson = new SdfPart[numParts];
+                vdf.PartsFirstPerson = new GeometryDefinition[numParts];
                 for (int i = 0; i < numParts; i++)
                 {
-                    SdfPart sdfPart = new SdfPart();
-                    sdfPart.Name = br.ReadCString(8);
-                    sdfPart.Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-                    sdfPart.Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-                    sdfPart.Forward = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-                    sdfPart.Position = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-                    sdfPart.ParentName = br.ReadCString(8);
+                    vdf.PartsFirstPerson[i] = GeometryDefinition.Read(br);
                     br.Position += 36;
-
-                    vdf.PartsFirstPerson[i] = sdfPart;
                 }
 
                 br.FindNext("COLP");

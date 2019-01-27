@@ -6,29 +6,28 @@ using UnityEngine.UI;
 
 namespace Assets.Scripts
 {
-    public class SdfViewer : MonoBehaviour
+    public class XdfViewer : MonoBehaviour
     {
-        public GameObject SDFContainer;
-        private CacheManager _cacheManager;
-        public string[] SdfFiles;
         public string GamePath;
+
+        private GameObject _currentObject;
+        private CacheManager _cacheManager;
 
         public Transform ButtonPrefab;
         public Transform ListTarget;
 
-        // Use this for initialization
-        private void Start()
+        private void Awake()
         {
             Game.Instance.GamePath = GamePath;
 
             _cacheManager = CacheManager.Instance;
             _cacheManager.Palette = ActPaletteParser.ReadActPalette("t01.act");
 
-            SdfFiles = VirtualFilesystem.Instance.FindAllWithExtension(".sdf").ToArray();
+            string[] xdfFiles = VirtualFilesystem.Instance.FindAllWithExtension(".xdf").ToArray();
 
-            foreach (string sdfFile in SdfFiles)
+            foreach (string xdfFile in xdfFiles)
             {
-                string filename = sdfFile;
+                string filename = xdfFile;
                 Button button = Instantiate(ButtonPrefab, Vector3.zero, Quaternion.identity, ListTarget).GetComponent<Button>();
                 button.GetComponentInChildren<Text>().text = filename;
                 button.onClick.AddListener(() =>
@@ -40,15 +39,15 @@ namespace Assets.Scripts
 
         private void OnClickButton(string filename)
         {
-            LoadSDF(filename);
+            LoadXDF(filename);
         }
 
-        private void LoadSDF(string filename)
+        private void LoadXDF(string filename)
         {
-            if (SDFContainer != null)
-                Destroy(SDFContainer);
+            if (_currentObject != null)
+                Destroy(_currentObject);
 
-            SDFContainer = _cacheManager.ImportSdf(filename, transform, Vector3.zero, Quaternion.identity, false, out _, out _);
+            _currentObject = _cacheManager.ImportXdf(filename, transform, true);
             _cacheManager.ClearCache();
         }
     }

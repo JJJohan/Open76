@@ -48,7 +48,7 @@ namespace Assets.Scripts.CarSystems.Components
 
         private void LoadProjectile()
         {
-            CacheManager.GeoMeshCacheEntry meshCacheEntry = CacheManager.Instance.ImportMesh(Gdf.Projectile.Name + ".geo", null, 0);
+            CacheManager.GeoMeshCacheEntry meshCacheEntry = CacheManager.Instance.ImportMesh(Gdf.Projectile.Name + ".geo", null, 0, 0);
 
             GameObject obj = Object.Instantiate(CacheManager.Instance.ProjectilePrefab);
             obj.SetActive(false);

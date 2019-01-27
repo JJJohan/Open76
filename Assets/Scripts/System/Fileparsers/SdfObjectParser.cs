@@ -9,18 +9,8 @@ namespace Assets.Scripts.System.Fileparsers
         public uint Health { get; set; }
         public string DestroySoundName { get; set; }
         public Xdf Xdf { get; set; }
-        public SdfPart[] Parts { get; set; }
-        public SdfPart WreckedPart { get; set; }
-    }
-
-    public class SdfPart
-    {
-        public string Name { get; set; }
-        public string ParentName { get; set; }
-        public Vector3 Position { get; set; }
-        public Vector3 Right { get; set; }
-        public Vector3 Up { get; set; }
-        public Vector3 Forward { get; set; }
+        public GeometryDefinition[] Parts { get; set; }
+        public GeometryDefinition WreckedPart { get; set; }
     }
 
     public class SdfObjectParser
@@ -58,24 +48,16 @@ namespace Assets.Scripts.System.Fileparsers
 
                 br.FindNext("SGEO");
                 uint numParts = br.ReadUInt32();
-                sdf.Parts = new SdfPart[numParts];
+                sdf.Parts = new GeometryDefinition[numParts];
                 for (int i = 0; i < numParts; i++)
                 {
-                    SdfPart sdfPart = new SdfPart();
-                    sdfPart.Name = br.ReadCString(8);
-                    sdfPart.Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-                    sdfPart.Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-                    sdfPart.Forward = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-                    sdfPart.Position = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-                    sdfPart.ParentName = br.ReadCString(8);
+                    sdf.Parts[i] = GeometryDefinition.Read(br);
                     br.Position += 56;
-
-                    sdf.Parts[i] = sdfPart;
                 }
 
                 if (canWreck)
                 {
-                    SdfPart wreckedPart = GetDestroyedPart(br);
+                    GeometryDefinition wreckedPart = GetDestroyedPart(br);
                     if (wreckedPart == null)
                     {
                         wreckedPart = GetDestroyedPart(br);
@@ -89,7 +71,7 @@ namespace Assets.Scripts.System.Fileparsers
             }
         }
         
-        private static SdfPart GetDestroyedPart(Bwd2Reader br)
+        private static GeometryDefinition GetDestroyedPart(Bwd2Reader br)
         {
             string partName = br.ReadCString(8);
             if (string.IsNullOrEmpty(partName) || partName.ToLower() == "null")
@@ -98,7 +80,8 @@ namespace Assets.Scripts.System.Fileparsers
                 return null;
             }
 
-            SdfPart wreckedPart = new SdfPart();
+            
+            GeometryDefinition wreckedPart = new GeometryDefinition();
             wreckedPart.Name = partName;
             wreckedPart.Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
             wreckedPart.Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());

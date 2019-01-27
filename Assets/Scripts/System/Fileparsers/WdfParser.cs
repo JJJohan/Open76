@@ -16,7 +16,7 @@ namespace Assets.Scripts.System.Fileparsers
         public uint Int1 { get; set; }
         public float Float5 { get; set; }
         public float Radius { get; set; }
-        public SdfPart[] Parts { get; set; }
+        public GeometryDefinition[] Parts { get; set; }
     }
 
     internal class WdfParser
@@ -44,19 +44,11 @@ namespace Assets.Scripts.System.Fileparsers
 
                 br.FindNext("WGEO");
                 uint numParts = br.ReadUInt32();
-                wdf.Parts = new SdfPart[numParts];
+                wdf.Parts = new GeometryDefinition[numParts];
                 for (int i = 0; i < numParts; i++)
                 {
-                    SdfPart sdfPart = new SdfPart();
-                    sdfPart.Name = br.ReadCString(8);
-                    sdfPart.Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-                    sdfPart.Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-                    sdfPart.Forward = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-                    sdfPart.Position = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-                    sdfPart.ParentName = br.ReadCString(8);
+                    wdf.Parts[i] = GeometryDefinition.Read(br);
                     br.Position += 36;
-
-                    wdf.Parts[i] = sdfPart;
                 }
 
                 br.Position -= 16;

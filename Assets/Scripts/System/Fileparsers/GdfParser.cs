@@ -18,11 +18,11 @@ namespace Assets.Scripts.System.Fileparsers
         public string SoundName { get; set; }
         public string EnabledSpriteName { get; set; }
         public string DisabledSpriteName { get; set; }
-        public SdfPart[] TopParts { get; set; }
-        public SdfPart[] SideParts { get; set; }
-        public SdfPart[] InsideParts { get; set; }
-        public SdfPart[] TurretParts { get; set; }
-        public SdfPart Projectile { get; set; }
+        public GeometryDefinition[] TopParts { get; set; }
+        public GeometryDefinition[] SideParts { get; set; }
+        public GeometryDefinition[] InsideParts { get; set; }
+        public GeometryDefinition[] TurretParts { get; set; }
+        public GeometryDefinition Projectile { get; set; }
     }
     
     public class GdfParser
@@ -72,10 +72,10 @@ namespace Assets.Scripts.System.Fileparsers
 
                 br.FindNext("GPOF"); // 192 bytes
 
-                SdfPart[] parts = new SdfPart[4];
+                GeometryDefinition[] parts = new GeometryDefinition[4];
                 for (int i = 0; i < 4; ++i)
                 {
-                    SdfPart part = new SdfPart();
+                    GeometryDefinition part = new GeometryDefinition();
                     part.Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                     part.Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                     part.Forward = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
@@ -104,7 +104,7 @@ namespace Assets.Scripts.System.Fileparsers
                             }
                             else
                             {
-                                SdfPart sdfPart = new SdfPart
+                                GeometryDefinition geometryDefinition = new GeometryDefinition
                                 {
                                     Name = partName,
                                     Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
@@ -120,34 +120,34 @@ namespace Assets.Scripts.System.Fileparsers
                                     case 'P':
                                         if (gdf.TopParts == null)
                                         {
-                                            gdf.TopParts = new SdfPart[numParts];
+                                            gdf.TopParts = new GeometryDefinition[numParts];
                                         }
 
-                                        gdf.TopParts[topPartsIndex++] = sdfPart;
+                                        gdf.TopParts[topPartsIndex++] = geometryDefinition;
                                         break;
                                     case 'S':
                                         if (gdf.SideParts == null)
                                         {
-                                            gdf.SideParts = new SdfPart[numParts];
+                                            gdf.SideParts = new GeometryDefinition[numParts];
                                         }
 
-                                        gdf.SideParts[sidePartsIndex++] = sdfPart;
+                                        gdf.SideParts[sidePartsIndex++] = geometryDefinition;
                                         break;
                                     case 'T':
                                         if (gdf.TurretParts == null)
                                         {
-                                            gdf.TurretParts = new SdfPart[numParts];
+                                            gdf.TurretParts = new GeometryDefinition[numParts];
                                         }
 
-                                        gdf.TurretParts[turretPartsIndex++] = sdfPart;
+                                        gdf.TurretParts[turretPartsIndex++] = geometryDefinition;
                                         break;
                                     case 'I':
                                         if (gdf.InsideParts == null)
                                         {
-                                            gdf.InsideParts = new SdfPart[numParts];
+                                            gdf.InsideParts = new GeometryDefinition[numParts];
                                         }
 
-                                        gdf.InsideParts[insidePartsIndex++] = sdfPart;
+                                        gdf.InsideParts[insidePartsIndex++] = geometryDefinition;
                                         break;
                                     default:
                                         Debug.LogWarningFormat("Unknown part type '{0}' for part name '{1}'.", partType, partName);
@@ -170,7 +170,7 @@ namespace Assets.Scripts.System.Fileparsers
 
                 br.ReadInt32();
 
-                gdf.Projectile = new SdfPart
+                gdf.Projectile = new GeometryDefinition
                 {
                     Name = br.ReadCString(8),
                     Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
