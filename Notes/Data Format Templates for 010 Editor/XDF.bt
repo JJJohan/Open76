@@ -20,15 +20,16 @@ struct XDFC
     TAG Tag;
     SetBackColor(cLtGreen);
     uint Frames;
-    float FrameRate;
-    float LifeTime;
-    SetBackColor(cRed);
-    char Unknown4[12];
     SetBackColor(cLtRed);
+    float Unknown1;
+    float Unknown2;
+    SetBackColor(cRed);
+    char Unknown3[12];
+    SetBackColor(cLtRed);
+    float Unknown4;
     float Unknown5;
     float Unknown6;
-    float Unknown7;
-    uint Unknown8;    
+    uint Unknown7;    
 };
 
 struct XGEO

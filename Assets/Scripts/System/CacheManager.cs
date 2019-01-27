@@ -337,7 +337,7 @@ namespace Assets.Scripts.System
             return partObj;
         }
 
-        public GameObject ImportXdf(string fileName, Transform parent, bool loop = false)
+        public Effect ImportXdf(string fileName, Transform parent)
         {
             if (!_xdfCache.TryGetValue(fileName, out Xdf xdf))
             {
@@ -352,7 +352,6 @@ namespace Assets.Scripts.System
 
             Effect effect = xdfObject.AddComponent<Effect>();
             effect.Initialise(xdf);
-            effect.Loop = loop;
             
             Dictionary<string, GameObject> partDict = new Dictionary<string, GameObject> { { "WORLD", xdfObject } };
 
@@ -371,7 +370,7 @@ namespace Assets.Scripts.System
                 effect.AddPart(partObj.GetComponent<MeshRenderer>(), materials);
             }
 
-            return xdfObject;
+            return effect;
         }
 
         public GameObject ImportSdf(string filename, Transform parent, Vector3 localPosition, Quaternion rotation, bool canWreck, out Sdf sdf, out GameObject wreckedPart)

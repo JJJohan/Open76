@@ -6,6 +6,8 @@ namespace Assets.Scripts.System
 {
     public class Effect : MonoBehaviour
     {
+        private const float FrameRate = 1f / 25f; // Haven't found a consistent value in XDF that resembles framerate.
+
         private struct EffectPair
         {
             public MeshRenderer Renderer;
@@ -18,10 +20,8 @@ namespace Assets.Scripts.System
         private float _currentTime;
         private int _frameIndex;
         private int _effectCount;
-        private float _totalTime;
-        private float _lifeTime;
 
-        public bool Loop { get; set; }
+        public bool Loop { get; set; } // Only used for debugging / XDF viewer scene.
 
         private void Awake()
         {
@@ -30,9 +30,9 @@ namespace Assets.Scripts.System
 
         public void Initialise(Xdf xdf)
         {
+            _frameRate = FrameRate;
             _frameCount = xdf.Frames;
-            _frameRate = 1f / xdf.LifeTime;
-            _lifeTime = xdf.LifeTime;
+            gameObject.SetActive(false);
         }
 
         public void AddPart(MeshRenderer partRenderer, Material[] materials)
@@ -46,25 +46,40 @@ namespace Assets.Scripts.System
             ++_effectCount;
         }
 
+        public void Fire()
+        {
+            _currentTime = 0f;
+            _frameIndex = 0;
+            UpdateMaterial();
+            gameObject.SetActive(true);
+        }
+
+        private void UpdateMaterial()
+        {
+            for (int i = 0; i < _effectCount; ++i)
+            {
+                _effectPairs[i].Renderer.material = _effectPairs[i].Materials[_frameIndex];
+            }
+        }
+
         private void FixedUpdate()
         {
             float dt = Time.fixedDeltaTime;
             _currentTime += dt;
-            _totalTime += dt;
             if (_currentTime >= _frameRate)
             {
-                _frameIndex = (_frameIndex + 1) % _frameCount;
-                for (int i = 0; i < _effectCount; ++i)
-                {
-                    _effectPairs[i].Renderer.material = _effectPairs[i].Materials[_frameIndex];
-                }
-
+                UpdateMaterial();
+                ++_frameIndex;
                 _currentTime -= _frameRate;
             }
 
-            if (!Loop && _totalTime >= _lifeTime)
+            if (Loop)
             {
-                Destroy(gameObject);
+                _frameIndex %= _frameCount;
+            }
+            else if (_frameIndex == _frameCount)
+            {
+                gameObject.SetActive(false);
             }
         }
     }

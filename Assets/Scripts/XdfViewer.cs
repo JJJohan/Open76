@@ -15,6 +15,7 @@ namespace Assets.Scripts
 
         public Transform ButtonPrefab;
         public Transform ListTarget;
+        public bool LoopEffects = true;
 
         private void Awake()
         {
@@ -47,7 +48,11 @@ namespace Assets.Scripts
             if (_currentObject != null)
                 Destroy(_currentObject);
 
-            _currentObject = _cacheManager.ImportXdf(filename, transform, true);
+            Effect effect = _cacheManager.ImportXdf(filename, transform);
+            effect.Loop = LoopEffects;
+            effect.Fire();
+
+            _currentObject = effect.gameObject;
             _cacheManager.ClearCache();
         }
     }
