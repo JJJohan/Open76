@@ -174,12 +174,43 @@ namespace Assets.Scripts.System.Fileparsers
                 br.ReadSingle();
                 br.ReadSingle();
                 br.ReadInt32();
+                br.ReadCString(13);
                 gdf.ImpactEffectGround = br.ReadCString(13);
                 gdf.ImpactSoundGround = br.ReadCString(13);
                 gdf.ImpactEffectCar = br.ReadCString(13);
                 gdf.ImpactSoundCar = br.ReadCString(13);
                 gdf.ImpactEffectBuilding = br.ReadCString(13);
                 gdf.ImpactSoundBuilding = br.ReadCString(13);
+
+                if (gdf.ImpactEffectGround == "null")
+                {
+                    gdf.ImpactEffectGround = null;
+                }
+
+                if (gdf.ImpactSoundGround == "null")
+                {
+                    gdf.ImpactSoundGround = null;
+                }
+
+                if (gdf.ImpactEffectCar == "null")
+                {
+                    gdf.ImpactEffectCar = null;
+                }
+
+                if (gdf.ImpactSoundCar == "null")
+                {
+                    gdf.ImpactSoundCar = null;
+                }
+
+                if (gdf.ImpactEffectBuilding == "null")
+                {
+                    gdf.ImpactEffectBuilding = null;
+                }
+
+                if (gdf.ImpactSoundBuilding == "null")
+                {
+                    gdf.ImpactSoundBuilding = null;
+                }
 
                 br.FindNext("OGEO"); // 104 bytes
 
