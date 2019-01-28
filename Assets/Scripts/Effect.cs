@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Assets.Scripts.Entities;
 using Assets.Scripts.System.Fileparsers;
 using UnityEngine;
 
@@ -7,6 +8,7 @@ namespace Assets.Scripts
     public class Effect : MonoBehaviour
     {
         private const float FrameRate = 1f / 25f; // Haven't found a consistent value in XDF that resembles framerate.
+        private const float Scale = 2f; // Scale seems far too small at 1.0x
 
         private struct EffectPair
         {
@@ -20,6 +22,7 @@ namespace Assets.Scripts
         private float _currentTime;
         private int _frameIndex;
         private int _effectCount;
+        private Transform _transform;
 
         public bool Loop { get; set; } // Only used for debugging / XDF viewer scene.
         public bool AutoDestroy { get; set; }
@@ -27,6 +30,7 @@ namespace Assets.Scripts
         private void Awake()
         {
             _effectPairs = new List<EffectPair>();
+            _transform = transform;
         }
 
         public void Initialise(Xdf xdf)
@@ -53,6 +57,13 @@ namespace Assets.Scripts
             _frameIndex = 0;
             UpdateMaterial();
             gameObject.SetActive(true);
+            _transform.localScale = new Vector3(Scale, Scale, Scale);
+						
+            Car playerCar = Car.Player;
+            if (playerCar != null)
+            {
+                _transform.LookAt(playerCar.transform);
+            }
         }
 
         private void UpdateMaterial()
