@@ -174,9 +174,7 @@ namespace Assets.Scripts.CarSystems
         {
             GameObject projObj = Object.Instantiate(weapon.ProjectilePrefab, weapon.Transform.position, weapon.Transform.rotation);
             Projectile projectile = projObj.GetComponent<Projectile>();
-            projectile.Owner = _car;
-            projectile.Gdf = weapon.Gdf;
-            projObj.SetActive(true);
+            projectile.Initialise(_car, weapon.Gdf);
 
             weapon.LastFireTime = Time.time;
             _weaponAudio.PlayIfNotAlreadyPlaying(weapon.FireSound);

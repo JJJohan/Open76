@@ -7,12 +7,13 @@ namespace Assets.Scripts
 {
     public class Projectile : MonoBehaviour
     {
-        public Car Owner { get; set; }
-        public Gdf Gdf { get; set; }
-
         private const float MaxLifeTime = 10.0f;
 
         private float _lifeTime;
+        private Car _owner;
+        private Gdf _gdf;
+        private Transform _transform;
+        private Vector3 _lastPos;
 
         private enum ImpactType
         {
@@ -21,55 +22,73 @@ namespace Assets.Scripts
             Car
         }
 
-        private void Update()
+        public void Initialise(Car owner, Gdf gdf)
         {
-            float dt = Time.deltaTime;
-
-            if (Gdf.BulletVelocity > 0.0f)
-            {
-                transform.Translate(Vector3.forward * Gdf.BulletVelocity * dt, Space.Self);
-            }
+            _owner = owner;
+            _gdf = gdf;
+            gameObject.SetActive(true);
+            _transform = transform;
+            _lastPos = _transform.position;
+        }
+        
+        private void FixedUpdate()
+        {
+            float dt = Time.fixedDeltaTime;
 
             _lifeTime += dt;
             if (_lifeTime > MaxLifeTime)
             {
                 Destroy(gameObject);
             }
+
+            _transform.Translate(Vector3.forward * _gdf.BulletVelocity * dt, Space.Self);
+
+            Vector3 currentPos = _transform.position;
+            float dist = Vector3.Distance(currentPos, _lastPos);
+            if (dist > float.Epsilon)
+            {
+                if (Physics.Linecast(_lastPos, currentPos, out RaycastHit hitInfo))
+                {
+                    CollisionCheck(ref hitInfo);
+                }
+            }
+
+            _lastPos = currentPos;
         }
 
-        private void OnTriggerEnter(Collider other)
+        private void CollisionCheck(ref RaycastHit hitInfo)
         {
+            Transform other = hitInfo.transform;
             WorldEntity entity = other.GetComponentInParent<WorldEntity>();
+            
             if (entity != null)
             {
                 Transform entityTransform = entity.transform;
-                if (entityTransform == Owner.transform)
+                if (entityTransform == _owner.transform)
                 {
                     return;
                 }
 
                 if (entity is Car)
                 {
-                    CreateImpactEffect(ImpactType.Car);
+                    CreateImpactEffect(ImpactType.Car, hitInfo.point);
                 }
                 else
                 {
-                    CreateImpactEffect(ImpactType.Building);
+                    CreateImpactEffect(ImpactType.Building, hitInfo.point);
                 }
 
-                Vector3 hitNormal = (entityTransform.position - transform.position).normalized;
-                entity.ApplyDamage(DamageType.Projectile, hitNormal, Gdf.Damage, Owner);
+                entity.ApplyDamage(DamageType.Projectile, hitInfo.normal, _gdf.Damage, _owner);
             }
             else
             {
-                CreateImpactEffect(ImpactType.Ground);
+                CreateImpactEffect(ImpactType.Ground, hitInfo.point);
             }
 
-            // TODO: Spawn impact sprite.
             Destroy(gameObject);
         }
 
-        private void CreateImpactEffect(ImpactType type)
+        private void CreateImpactEffect(ImpactType type, Vector3 point)
         {
             string effectName;
             string soundName;
@@ -77,25 +96,44 @@ namespace Assets.Scripts
             switch (type)
             {
                 case ImpactType.Building:
-                    effectName = Gdf.ImpactEffectBuilding;
-                    soundName = Gdf.ImpactSoundBuilding;
+                    effectName = _gdf.ImpactEffectBuilding;
+                    soundName = _gdf.ImpactSoundBuilding;
                     break;
                 case ImpactType.Car:
-                    effectName = Gdf.ImpactEffectCar;
-                    soundName = Gdf.ImpactSoundCar;
+                    effectName = _gdf.ImpactEffectCar;
+                    soundName = _gdf.ImpactSoundCar;
                     break;
                 default:
-                    effectName = Gdf.ImpactEffectGround;
-                    soundName = Gdf.ImpactSoundGround;
+                    effectName = _gdf.ImpactEffectGround;
+                    soundName = _gdf.ImpactSoundGround;
                     break;
             }
 
-            Effect effect = CacheManager.Instance.ImportXdf(effectName, transform);
+            if (effectName == null)
+            {
+                return;
+            }
+
+            Effect effect = CacheManager.Instance.ImportXdf(effectName, null);
+            if (effect == null)
+            {
+                return;
+            }
+
+            effect.transform.position = point;
             effect.AutoDestroy = true;
             effect.Fire();
 
+            if (soundName == null)
+            {
+                return;
+            }
+
             AudioSource audioSource = CacheManager.Instance.GetAudioSource(effect.gameObject, soundName);
-            audioSource.Play();
+            if (audioSource != null)
+            {
+                audioSource.Play();
+            }
         }
     }
 }
