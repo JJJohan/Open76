@@ -1,0 +1,64 @@
+//------------------------------------------------
+//--- 010 Editor v2.0 Binary Template
+//
+//      File: GEO
+//    Author: Johan Rensenbrink
+//   Version: 1.0
+//   Purpose: Parse GEO (Geometry) files for Interstate 76.
+//  Category: Data
+// File Mask: *.geo
+//  ID Bytes: 42 57 44 32
+//   History:  
+//   1.0   Initial release.
+//------------------------------------------------
+
+#include "Common.bt"
+
+struct VERTEXREF
+{
+    uint VertexIndex;
+    uint NormalIndex;
+    VECTOR2 Uv;
+};
+
+struct GEOFACE
+{
+    uint Index;
+    uint VerticesInFace;
+    COLOUR Colour;
+    VECTOR4 SurfaceNormal;
+    SetBackColor(cLtRed);
+    uint Unknown1;
+    SetBackColor(cLtGreen);
+    char SurfaceFlags1;
+    char SurfaceFlags2;
+    char SurfaceFlags3;
+    char TextureName[13];
+    SetBackColor(cLtRed);
+    uint Unknown2;
+    uint Unknown3;
+    SetBackColor(cLtGreen);
+    VERTEXREF VertexRef[VerticesInFace];
+};
+
+struct GEO
+{
+    char Tag[4];
+    SetBackColor(cLtRed);
+    uint Unknown1;
+    SetBackColor(cLtGreen);
+    char MeshName[16];
+    uint VertexCount;
+    uint FaceCount;
+    SetBackColor(cLtRed);
+    uint Unknown2;
+    SetBackColor(cLtYellow);
+    VECTOR3 Vertices[VertexCount];
+    VECTOR3 Normals[VertexCount];
+    SetBackColor(cLtGreen);
+    GEOFACE Faces[FaceCount] <optimize=false>;
+};
+
+LittleEndian(); 
+SetBackColor(cLtPurple);
+GEO file;

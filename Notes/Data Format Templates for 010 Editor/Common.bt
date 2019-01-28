@@ -1,0 +1,27 @@
+struct VECTOR2
+{
+    float X;
+    float Y;
+};
+
+struct VECTOR3
+{
+    float X;
+    float Y;
+    float Z;
+};
+
+struct VECTOR4
+{
+    float X;
+    float Y;
+    float Z;
+    float W;
+};
+
+struct COLOUR
+{
+    char R;
+    char G;
+    char B;
+};

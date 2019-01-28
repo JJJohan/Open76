@@ -12,12 +12,7 @@
 //   1.0   Initial release.
 //------------------------------------------------
 
-struct Vector3
-{
-    float X;
-    float Y;
-    float Z;
-};
+#include "Common.bt"
 
 struct BWD2
 {
