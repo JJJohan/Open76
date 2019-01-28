@@ -48,7 +48,7 @@ namespace Assets.Scripts.CarSystems.Components
 
         private void LoadProjectile()
         {
-            CacheManager.GeoMeshCacheEntry meshCacheEntry = CacheManager.Instance.ImportMesh(Gdf.Projectile.Name + ".geo", null, 0, 0);
+            CacheManager.GeoMeshCacheEntry meshCacheEntry = CacheManager.Instance.ImportMesh(Gdf.Projectile.Name + ".geo", null, 0, 1, true);
 
             GameObject obj = Object.Instantiate(CacheManager.Instance.ProjectilePrefab);
             obj.SetActive(false);
@@ -73,7 +73,7 @@ namespace Assets.Scripts.CarSystems.Components
                 }
                 else
                 {
-                    renderer.material = CacheManager.Instance.GetTextureMaterial(Gdf.Projectile.Name + ".map", true);
+                    renderer.material = CacheManager.Instance.GetTextureMaterial(Gdf.Projectile.Name + ".map", true, true);
                 }
             }
 

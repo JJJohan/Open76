@@ -74,7 +74,7 @@ namespace Assets.Scripts.System
             }
 
             CacheManager cacheManager = CacheManager.Instance;
-            Material roadMaterial = cacheManager.GetTextureMaterial(roadTextureFilename, false);
+            Material roadMaterial = cacheManager.GetTextureMaterial(roadTextureFilename, false, false);
             meshRenderer.material = roadMaterial;
 
             Mesh mesh = new Mesh();

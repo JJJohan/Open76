@@ -145,7 +145,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 701167b535fa5334eb7514fa1e0671f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  TextureFilename: 
   Speed: {x: 0.05, y: 0.05}
   Height: 1
 --- !u!23 &831432017

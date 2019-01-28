@@ -23,6 +23,8 @@ namespace Assets.Scripts.System
         private readonly Material _colorMaterialPrefab;
         private readonly Material _textureMaterialPrefab;
         private readonly Material _transparentMaterialPrefab;
+        private readonly Material _unlitTextureMaterialPrefab;
+        private readonly Material _unlitTransparentMaterialPrefab;
         private readonly Material _carMirrorMaterialPrefab;
 
         private readonly string[] _bannedNames =
@@ -51,6 +53,8 @@ namespace Assets.Scripts.System
             _colorMaterialPrefab = Resources.Load<Material>("Materials/AlphaMaterial");
             _textureMaterialPrefab = Resources.Load<Material>("Materials/TextureMaterial");
             _transparentMaterialPrefab = Resources.Load<Material>("Materials/AlphaMaterial");
+            _unlitTextureMaterialPrefab = Resources.Load<Material>("Materials/UnlitTextureMaterial");
+            _unlitTransparentMaterialPrefab = Resources.Load<Material>("Materials/UnlitAlphaMaterial");
             _carMirrorMaterialPrefab = Resources.Load<Material>("Materials/CarMirror");
 
             ProjectilePrefab = Resources.Load<GameObject>("Prefabs/ProjectilePrefab");
@@ -133,12 +137,20 @@ namespace Assets.Scripts.System
             return texture;
         }
 
-        public Material GetTextureMaterial(string textureName, bool transparent)
+        public Material GetTextureMaterial(string textureName, bool transparent, bool unlit)
         {
             if (!_materialCache.ContainsKey(textureName))
             {
                 Texture2D texture = GetTexture(textureName);
-                Material material = Object.Instantiate(transparent ? _transparentMaterialPrefab : _textureMaterialPrefab);
+                Material material;
+                if (unlit)
+                {
+                    material = Object.Instantiate(transparent ? _unlitTransparentMaterialPrefab : _unlitTextureMaterialPrefab);
+                }
+                else
+                {
+                    material = Object.Instantiate(transparent ? _transparentMaterialPrefab : _textureMaterialPrefab);
+                }
                 material.mainTexture = texture ?? Texture2D.blackTexture;
                 material.name = textureName;
                 _materialCache[textureName] = material;
@@ -159,7 +171,7 @@ namespace Assets.Scripts.System
             return material;
         }
 
-        private Material GetMaterial(GeoFace geoFace, Vtf vtf, int textureGroup, int frame)
+        private Material GetMaterial(GeoFace geoFace, Vtf vtf, int textureGroup, int frame, bool unlit)
         {
             if (geoFace.TextureName != null)
             {
@@ -185,7 +197,7 @@ namespace Assets.Scripts.System
                         }
                     }
                 }
-                return GetTextureMaterial(textureName, geoFace.SurfaceFlags2 == 5 || geoFace.SurfaceFlags2 == 7);
+                return GetTextureMaterial(textureName, geoFace.SurfaceFlags2 == 5 || geoFace.SurfaceFlags2 == 7, unlit);
             }
             return GetColorMaterial("color" + geoFace.Color, geoFace.Color);
         }
@@ -197,7 +209,7 @@ namespace Assets.Scripts.System
             public Material[] Materials { get; set; }
         }
 
-        public GeoMeshCacheEntry ImportMesh(string filename, Vtf vtf, int textureGroup, int frameCount)
+        public GeoMeshCacheEntry ImportMesh(string filename, Vtf vtf, int textureGroup, int frameCount, bool unlit)
         {
             if (MeshCache.TryGetValue(filename, out GeoMeshCacheEntry cacheEntry))
             {
@@ -217,7 +229,7 @@ namespace Assets.Scripts.System
             {
                 for (int j = 0; j < frameCount; ++j)
                 {
-                    Material material = GetMaterial(faces[i], vtf, textureGroup, j);
+                    Material material = GetMaterial(faces[i], vtf, textureGroup, j, unlit);
 
                     if (facesGroupedByMaterial.TryGetValue(material, out List<GeoFace> faceGroup))
                     {
@@ -279,9 +291,9 @@ namespace Assets.Scripts.System
             return cacheEntry;
         }
 
-        public GameObject ImportGeo(string filename, Vtf vtf, GameObject prefab, int textureGroup, int frameCount, out Material[] materials)
+        public GameObject ImportGeo(string filename, Vtf vtf, GameObject prefab, int textureGroup, int frameCount, bool unlit, out Material[] materials)
         {
-            GeoMeshCacheEntry meshCacheEntry = ImportMesh(filename, vtf, textureGroup, frameCount);
+            GeoMeshCacheEntry meshCacheEntry = ImportMesh(filename, vtf, textureGroup, frameCount, unlit);
             materials = meshCacheEntry.Materials;
 
             GameObject obj = Object.Instantiate(prefab);
@@ -292,7 +304,14 @@ namespace Assets.Scripts.System
             if (meshFilter != null)
             {
                 meshFilter.sharedMesh = meshCacheEntry.Mesh;
-                obj.GetComponent<MeshRenderer>().material = meshCacheEntry.Materials[0];
+                if (frameCount > 1)
+                {
+                    obj.GetComponent<MeshRenderer>().material = meshCacheEntry.Materials[0];
+                }
+                else
+                {
+                    obj.GetComponent<MeshRenderer>().materials = meshCacheEntry.Materials;
+                }
             }
             MeshCollider collider = obj.GetComponent<MeshCollider>();
             if (collider != null)
@@ -319,7 +338,7 @@ namespace Assets.Scripts.System
             return false;
         }
 
-        private GameObject LoadGeometryDefinition(GeometryDefinition geometryDefinition, Transform parent, int frameCount, out Material[] materials)
+        private GameObject LoadGeometryDefinition(GeometryDefinition geometryDefinition, Transform parent, bool collider, int frameCount, bool unlit, out Material[] materials)
         {
             materials = null;
             string geoFilename = geometryDefinition.Name + ".geo";
@@ -329,7 +348,7 @@ namespace Assets.Scripts.System
                 return null;
             }
 
-            GameObject partObj = ImportGeo(geoFilename, null, _3DObjectPrefab, 0, frameCount, out materials);
+            GameObject partObj = ImportGeo(geoFilename, null, collider ? _3DObjectPrefab : _noColliderPrefab, 0, frameCount, unlit, out materials);
             partObj.transform.parent = parent;
             partObj.transform.localPosition = geometryDefinition.Position;
             partObj.transform.localRotation = Quaternion.identity;
@@ -358,7 +377,7 @@ namespace Assets.Scripts.System
             for (int i = 0; i < parts.Length; ++i)
             {
                 GeometryDefinition part = parts[i];
-                GameObject partObj = LoadGeometryDefinition(part, partDict[part.ParentName].transform, xdf.Frames, out Material[] materials);
+                GameObject partObj = LoadGeometryDefinition(part, partDict[part.ParentName].transform, false, xdf.Frames, true, out Material[] materials);
                 if (partObj == null)
                 {
                     continue;
@@ -392,7 +411,7 @@ namespace Assets.Scripts.System
 
             foreach (GeometryDefinition sdfPart in sdf.Parts)
             {
-                GameObject partObj = LoadGeometryDefinition(sdfPart, partDict[sdfPart.ParentName].transform, 1, out _);
+                GameObject partObj = LoadGeometryDefinition(sdfPart, partDict[sdfPart.ParentName].transform, true, 1, false, out _);
                 if (partObj == null)
                 {
                     continue;
@@ -404,7 +423,7 @@ namespace Assets.Scripts.System
 
             if (canWreck && sdf.WreckedPart != null)
             {
-                wreckedPart = LoadGeometryDefinition(sdf.WreckedPart, partDict[sdf.WreckedPart.ParentName].transform, 1, out _);
+                wreckedPart = LoadGeometryDefinition(sdf.WreckedPart, partDict[sdf.WreckedPart.ParentName].transform, true, 1, false, out _);
                 if (wreckedPart != null)
                 {
                     wreckedPart.SetActive(false);
@@ -627,7 +646,7 @@ namespace Assets.Scripts.System
                 return;
             }
 
-            GameObject partObj = ImportGeo(geoFilename, vtf, prefab, textureGroup, 1, out _);
+            GameObject partObj = ImportGeo(geoFilename, vtf, prefab, textureGroup, 1, false, out _);
             
             Transform partTransform = partObj.transform;
             if (!forgetParentPosition)
