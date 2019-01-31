@@ -488,12 +488,25 @@ namespace Assets.Scripts.System
                         LogUnhandledEntity(actionName, entityIndex, entity, machine);
                         return 0;
                     }
+                case "failAllObj":
+                    {
+                        int secondsToGameOver = args.Dequeue().Value;
+                        int failMessageIndex = args.Dequeue().Value;
+                        Game.Instance.FailAllObjectives(secondsToGameOver, failMessageIndex);
+                    }
+                    break;
+                case "reveal":
+                    {
+                        int objIndex = args.Dequeue().Value;
+                        Game.Instance.RevealObjective(objIndex);
+                    }
+                    break;
                 case "startTimer":
                     int timerIndex = args.Dequeue().Value;
                     fsmRunner.Timers[timerIndex] = Time.unscaledTime;
                     break;
                 default:
-                    Debug.LogWarning("FSM action not implemented: " + actionName + " @ " + (machine.IP-1));
+                    Debug.LogWarning("FSM action not implemented: " + actionName + " @ " + (machine.IP-1) + " - argument count: " + args.Count);
                     break;
             }
 

@@ -52,6 +52,7 @@ namespace Assets.Scripts.System
 
             Terrain[,] terrainPatches = new Terrain[80, 80];
             MsnMissionParser.MissonDefinition mdef = MsnMissionParser.ReadMsnMission(msnFilename);
+            _game.SetActiveMission(mdef);
 
             _cacheManager.Palette = ActPaletteParser.ReadActPalette(mdef.PaletteFilePath);
             Texture2D surfaceTexture = TextureParser.ReadMapTexture(mdef.SurfaceTextureFilePath, _cacheManager.Palette, TextureFormat.RGB24, true, FilterMode.Point);
