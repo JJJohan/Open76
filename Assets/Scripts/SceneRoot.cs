@@ -14,20 +14,27 @@ namespace Assets.Scripts
         public string MissionFile;
         public string VcfToLoad;
 
+        private Game _game;
+
+        public static SceneRoot Instance { get; private set; }
+
         private IEnumerator Start()
         {
+            Instance = this;
+            _game = Game.Instance;
+
 #if UNITY_EDITOR
             gameObject.AddComponent<SceneViewAudioHelper>();
 #endif
 
-            if (!string.IsNullOrEmpty(Game.Instance.LevelName))
+            if (!string.IsNullOrEmpty(_game.LevelName))
             {
-                MissionFile = Game.Instance.LevelName;
+                MissionFile = _game.LevelName;
             }
 
-            if (string.IsNullOrEmpty(Game.Instance.GamePath))
+            if (string.IsNullOrEmpty(_game.GamePath))
             {
-                Game.Instance.GamePath = GamePath;
+                _game.GamePath = GamePath;
             }
 
             yield return LevelLoader.Instance.LoadLevel(MissionFile);
@@ -45,6 +52,11 @@ namespace Assets.Scripts
 
                 CameraManager.Instance.MainCamera.GetComponent<SmoothFollow>().Target = importedVcf.transform;
             }
+        }
+
+        private void OnDestroy()
+        {
+            Instance = null;
         }
     }
 }

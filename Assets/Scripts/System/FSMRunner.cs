@@ -52,7 +52,7 @@ namespace Assets.Scripts.System
 
         private void LateUpdate()
         {
-            if (FSM == null)
+            if (FSM == null || Game.Instance.Paused)
             {
                 return;
             }
