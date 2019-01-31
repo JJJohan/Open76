@@ -4,14 +4,10 @@ using UnityEngine.XR;
 
 namespace Assets.Scripts.Menus
 {
-    internal class GraphicsMenu : IMenu
+    internal class GraphicsMenu : BaseMenu
     {
-        private MenuController _menuController;
-
-        public MenuDefinition BuildMenu(MenuController menuController)
+        protected override MenuDefinition BuildMenu()
         {
-            _menuController = menuController;
-
             return new MenuDefinition
             {
                 BackgroundFilename = "6grxdet1",
@@ -49,7 +45,7 @@ namespace Assets.Scripts.Menus
             Resolution newResolution = Screen.resolutions[nextIndex];
             Screen.SetResolution(newResolution.width, newResolution.height, false, newResolution.refreshRate);
 
-            _menuController.Redraw();
+            Draw();
         }
 
         private void NextQuality()
@@ -57,19 +53,19 @@ namespace Assets.Scripts.Menus
             int nextLevel = (QualitySettings.GetQualityLevel() + 1) % QualitySettings.names.Length;
             QualitySettings.SetQualityLevel(nextLevel);
 
-            _menuController.Redraw();
+            Draw();
         }
 
         private void ToggleVR()
         {
             XRSettings.enabled = !XRSettings.enabled;
 
-            _menuController.Redraw();
+            Draw();
         }
 
-        public void Back()
+        public override void Back()
         {
-            _menuController.ShowMenu<OptionsMenu>();
+            MenuController.Instance.ShowMenu<OptionsMenu>();
         }
     }
 }

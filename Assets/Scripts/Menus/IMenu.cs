@@ -2,7 +2,8 @@
 {
     public interface IMenu
     {
-        MenuDefinition BuildMenu(MenuController menuController);
         void Back();
+        void Draw();
+        void Close();
     }
 }

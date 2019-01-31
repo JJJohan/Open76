@@ -2,14 +2,10 @@
 
 namespace Assets.Scripts.Menus
 {
-    internal class AudioControlMenu : IMenu
+    internal class AudioControlMenu : BaseMenu
     {
-        private MenuController _menuController;
-
-        public MenuDefinition BuildMenu(MenuController menuController)
+        protected override MenuDefinition BuildMenu()
         {
-            _menuController = menuController;
-
             return new MenuDefinition
             {
                 BackgroundFilename = "6audcon1",
@@ -34,9 +30,9 @@ namespace Assets.Scripts.Menus
             throw new NotImplementedException();
         }
         
-        public void Back()
+        public override void Back()
         {
-            _menuController.ShowMenu<OptionsMenu>();
+            MenuController.Instance.ShowMenu<OptionsMenu>();
         }
     }
 }
