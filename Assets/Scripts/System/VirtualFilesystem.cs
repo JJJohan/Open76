@@ -108,8 +108,8 @@ namespace Assets.Scripts.System
                         string line = sr.ReadLine();
                         string[] splitted = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                         string filename = splitted[0].ToLower();
-                        uint offset = uint.Parse(splitted[1]);
-                        uint length = uint.Parse(splitted[2]);
+                        uint offset = (uint)Utils.ParseIntFast(splitted[1]);
+                        uint length = (uint)Utils.ParseIntFast(splitted[2]);
 
                         if (_files.ContainsKey(filename))
                             continue;

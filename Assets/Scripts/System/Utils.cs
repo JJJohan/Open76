@@ -42,6 +42,18 @@ namespace Assets.Scripts.System
             return true;
         }
 
+        public static int ParseIntFast(string text)
+        {
+            int val = 0;
+            int textLength = text.Length;
+            for (int i = 0; i < textLength; ++i)
+            {
+                val = val * 10 + (text[i] - '0');
+            }
+
+            return val;
+        }
+
         public static Vector2 RotateVector(Vector2 v, float angle)
         {
             float radian = angle * Mathf.Deg2Rad;
