@@ -13,7 +13,7 @@ namespace Assets.Scripts
 {
     public class Game
     {
-        private class Objective
+        public class Objective
         {
             public bool Revealed;
             public string ObjectiveText;
@@ -26,6 +26,8 @@ namespace Assets.Scripts
         private Dictionary<int, string> _failMessages;
         private bool _paused;
         
+        private const string RevealObjectiveSound = "cnote.gpw";
+
         public static Game Instance
         {
             get { return _instance ?? (_instance = new Game()); }
@@ -35,6 +37,7 @@ namespace Assets.Scripts
         public string GamePath { get; set; }
         public bool IntroPlayed { get; set; }
         public string MapFileName { get; set; }
+        public Font Font { get; private set; }
         
         public bool Paused
         {
@@ -49,6 +52,21 @@ namespace Assets.Scripts
                 _paused = value;
                 Time.timeScale = _paused ? 0f : 1f;
             }
+        }
+
+        public List<Objective> GetVisibleObjectives()
+        {
+            List<Objective> visibleObjectives = new List<Objective>();
+
+            foreach (Objective objective in _objectives.Values)
+            {
+                if (objective.Revealed)
+                {
+                    visibleObjectives.Add(objective);
+                }
+            }
+
+            return visibleObjectives;
         }
 
         public void FailAllObjectives(int secondsToGameOver, int failMessageIndex)
@@ -79,6 +97,8 @@ namespace Assets.Scripts
                 Debug.LogError($"Tried to reveal objective at index '{objectiveIndex}', but no objective exists at this index.");
                 return;
             }
+            
+            SceneRoot.Instance.PlayUiSound(RevealObjectiveSound);
 
             objective.Revealed = true;
         }
@@ -173,6 +193,8 @@ namespace Assets.Scripts
         {
             _objectives = new Dictionary<int, Objective>();
             _failMessages = new Dictionary<int, string>();
+
+            Font = Resources.Load<Font>("Fonts/LEE_____");
 
 #if !UNITY_EDITOR
             string gameExeDir = Path.Combine(Application.dataPath, "../..");

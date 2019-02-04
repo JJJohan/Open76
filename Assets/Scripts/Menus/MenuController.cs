@@ -52,6 +52,17 @@ namespace Assets.Scripts.Menus
                 }
             }
 
+            else if (Input.GetKeyDown(KeyCode.N))
+            {
+                if (_currentMenu == null)
+                {
+                    ShowMenu<NoteScreen>();
+                }
+                else if (_currentMenu is NoteScreen)
+                {
+                    CloseMenu();
+                }
+            }
         }
 
         private void OnDestroy()
