@@ -10,7 +10,7 @@ namespace Assets.Scripts.Menus
         private static Button _menuButtonPrefab;
         private static Transform _blankSeparatorPrefab;
         
-        private bool _drawn;
+        private bool _opened;
         private GameObject _rootObject;
 
         static BaseMenu()
@@ -23,9 +23,9 @@ namespace Assets.Scripts.Menus
 
         public abstract void Back();
 
-        public void Draw()
+        public void Open()
         {
-            if (_drawn)
+            if (_opened)
             {
                 Close();
             }
@@ -94,19 +94,19 @@ namespace Assets.Scripts.Menus
                 }
             }
 
-            _drawn = true;
+            _opened = true;
         }
 
         public void Close()
         {
-            if (!_drawn)
+            if (!_opened)
             {
                 return;
             }
 
             Object.Destroy(_rootObject);
             _rootObject = null;
-            _drawn = false;
+            _opened = false;
         }
     }
 }

@@ -45,7 +45,7 @@ namespace Assets.Scripts.Menus
             Resolution newResolution = Screen.resolutions[nextIndex];
             Screen.SetResolution(newResolution.width, newResolution.height, false, newResolution.refreshRate);
 
-            Draw();
+            Open();
         }
 
         private void NextQuality()
@@ -53,14 +53,14 @@ namespace Assets.Scripts.Menus
             int nextLevel = (QualitySettings.GetQualityLevel() + 1) % QualitySettings.names.Length;
             QualitySettings.SetQualityLevel(nextLevel);
 
-            Draw();
+            Open();
         }
 
         private void ToggleVR()
         {
             XRSettings.enabled = !XRSettings.enabled;
 
-            Draw();
+            Open();
         }
 
         public override void Back()

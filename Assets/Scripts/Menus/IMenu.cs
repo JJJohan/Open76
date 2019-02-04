@@ -3,7 +3,7 @@
     public interface IMenu
     {
         void Back();
-        void Draw();
+        void Open();
         void Close();
     }
 }

@@ -80,7 +80,7 @@ namespace Assets.Scripts.Menus
             _currentMenu = new T();
             EventSystem.current.SetSelectedGameObject(null);
 
-            _currentMenu.Draw();
+            _currentMenu.Open();
 
             Game.Instance.Paused = true;
         }
