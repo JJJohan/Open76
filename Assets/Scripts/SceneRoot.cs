@@ -15,6 +15,9 @@ namespace Assets.Scripts
         public string VcfToLoad;
 
         private Game _game;
+        private AudioSource _audioSource1;
+        private AudioSource _audioSource2;
+        private AudioSource _lastAudioSource;
 
         public static SceneRoot Instance { get; private set; }
 
@@ -22,6 +25,14 @@ namespace Assets.Scripts
         {
             Instance = this;
             _game = Game.Instance;
+
+            _audioSource1 = gameObject.AddComponent<AudioSource>();
+            _audioSource1.spatialize = false;
+            _audioSource1.volume = 0.5f;
+            
+            _audioSource2 = gameObject.AddComponent<AudioSource>();
+            _audioSource2.spatialize = false;
+            _audioSource2.volume = 0.5f;
 
 #if UNITY_EDITOR
             gameObject.AddComponent<SceneViewAudioHelper>();
@@ -52,6 +63,20 @@ namespace Assets.Scripts
 
                 CameraManager.Instance.MainCamera.GetComponent<SmoothFollow>().Target = importedVcf.transform;
             }
+        }
+
+        public void PlayUiSound(string soundName)
+        {
+            AudioClip audioClip = CacheManager.Instance.GetAudioClip(soundName);
+            if (audioClip == null)
+            {
+                return;
+            }
+
+            AudioSource targetSource = (_lastAudioSource == _audioSource1) ? _audioSource2 : _audioSource1;
+            _lastAudioSource = targetSource;
+            targetSource.clip = audioClip;
+            targetSource.Play();
         }
 
         private void OnDestroy()

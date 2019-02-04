@@ -1,70 +1,38 @@
-﻿using Assets.Scripts.System;
-using UnityEngine;
-using UnityEngine.UI;
+﻿using UnityEngine;
 
 namespace Assets.Scripts.Menus
 {
-    public class MapScreen : IMenu
+    public class MapScreen : FullScreenMenu
     {
-        private GameObject _rootObject;
-        private GameObject _backgroundObject;
+        private const string OpenMapSound = "cmap2.gpw";
+        private const string SpeechSound = "gdsgc26.gpw";
 
-        public void Back()
+        protected override string MenuName
         {
-            MenuController.Instance.CloseMenu();
+            get { return "Map Screen"; }
         }
 
-        public void Close()
+        protected override string TextureName
         {
-            if (_rootObject == null)
+            get
             {
-                return;
-            }
+                string mapFileName = Game.Instance.MapFileName;
+                if (mapFileName == null)
+                {
+                    Debug.LogError("No map file name currently set.");
+                    return null;
+                }
 
-            Object.Destroy(_rootObject);
-            Object.Destroy(_backgroundObject);
-            _rootObject = null;
-            _backgroundObject = null;
+                return mapFileName;
+            }
         }
 
-        public void Draw()
+        public override void Open()
         {
-            string mapFileName = Game.Instance.MapFileName;
-            if (mapFileName == null)
-            {
-                Debug.LogError("No map file name currently set.");
-                return;
-            }
+            base.Open();
 
-            if (_rootObject != null)
-            {
-                Close();
-            }
-
-            Texture2D mapTexture = CacheManager.Instance.GetTexture(mapFileName);
-
-            _backgroundObject = new GameObject("Background");
-            Image backgroundImage = _backgroundObject.AddComponent<Image>();
-            backgroundImage.color = Color.black;
-            RectTransform backgroundtransform = _backgroundObject.GetComponent<RectTransform>();
-            backgroundtransform.SetParent(MenuController.Instance.Transform);
-            backgroundtransform.anchorMin = new Vector2(0f, 0f);
-            backgroundtransform.anchorMax = new Vector2(1f, 1f);
-            backgroundtransform.anchoredPosition = new Vector2(0f, 0f);
-            backgroundtransform.sizeDelta = new Vector2(0f, 0f);
-            backgroundtransform.localScale = new Vector3(1f, 1f, 1f);
-
-            _rootObject = new GameObject("Map Screen");
-            RawImage mapImage = _rootObject.AddComponent<RawImage>();
-            mapImage.texture = mapTexture;
-
-            RectTransform transform = _rootObject.GetComponent<RectTransform>();
-            transform.SetParent(MenuController.Instance.Transform);
-            transform.anchorMin = new Vector2(0.5f, 0f);
-            transform.anchorMax = new Vector2(0.5f, 1f);
-            transform.anchoredPosition = new Vector2(0f, 0f);
-            transform.sizeDelta = new Vector2(640f, 0f);
-            transform.localScale = new Vector3(1f, -1f, 1f);
+            SceneRoot.Instance.PlayUiSound(OpenMapSound);
+            SceneRoot.Instance.PlayUiSound(SpeechSound);
         }
     }
 }
