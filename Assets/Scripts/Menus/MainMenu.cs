@@ -5,6 +5,7 @@ using Assets.Scripts.System.Fileparsers;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace Assets.Scripts.Menus
@@ -18,6 +19,19 @@ namespace Assets.Scripts.Menus
         private RawImage _videoImage;
         private GameObject _tripSubButtons;
         private GameObject _meleeSubButtons;
+        private GameObject _multiMeleeSubButtons;
+        private GameObject _autoMeleeSubButtons;
+
+        private I76Button _newTripButton;
+        private I76Button _trainingButton;
+        private I76Button _bookmarkButton;
+        private I76Button _meleeButton;
+        private I76Button _multiMeleeButton;
+        private I76Button _joinButton;
+        private I76Button _hostButton;
+        private I76Button _autoMeleeButton;
+        private I76Button _scenarioButton;
+        private I76Button _instantMeleeButton;
 
         public GameObject VideoCanvasObject;
         public GameObject MenuCanvasObject;
@@ -161,14 +175,14 @@ namespace Assets.Scripts.Menus
             RectTransform subTextTransform = subTextObject.GetComponent<RectTransform>();
             subTextTransform.SetParent(MenuCanvasObject.transform);
             subTextTransform.sizeDelta = new Vector2(subTextTexture.width, subTextTexture.height);
-            subTextTransform.anchorMin = new Vector2(0.0f, 0.0f);
-            subTextTransform.anchorMax = new Vector2(0.0f, 0.0f);
+            subTextTransform.anchorMin = new Vector2(0.5f, 0.0f);
+            subTextTransform.anchorMax = new Vector2(0.5f, 0.0f);
             subTextTransform.pivot = new Vector2(0.5f, 0.5f);
-            subTextTransform.anchoredPosition = new Vector2(320f,subTextTexture.height);
+            subTextTransform.anchoredPosition = new Vector2(0f, subTextTexture.height);
 
             GameObject buttonObj = new GameObject("Button");
             I76Button button = buttonObj.AddComponent<I76Button>();
-            button.Setup(MenuCanvasObject.transform, normalTexture, highlightTexture, subTextObject, x, 480 - y);
+            button.Setup(MenuCanvasObject.transform, normalTexture, highlightTexture, subTextObject, x, y);
 
             button.OnActivate += OnButtonActivated;
             button.OnDeactivate += OnButtonDeactivated;
@@ -177,17 +191,41 @@ namespace Assets.Scripts.Menus
                 button.OnActivate += buttonAction;
             }
             
+            _buttons.Add(button);
             return button;
         }
 
         private void OnTrip()
         {
             _tripSubButtons.SetActive(true);
+            _newTripButton.Blocked = false;
+            _trainingButton.Blocked = false;
+            _bookmarkButton.Blocked = false;
         }
 
         private void OnMelee()
         {
             _meleeSubButtons.SetActive(true);
+            _multiMeleeButton.Blocked = false;
+            _autoMeleeButton.Blocked = false;
+        }
+
+        private void OnMultiMelee()
+        {
+            _meleeButton.PreventDeactivation();
+            _multiMeleeSubButtons.SetActive(true);
+            _autoMeleeButton.Blocked = true;
+            _hostButton.Blocked = false;
+            _joinButton.Blocked = false;
+        }
+
+        private void OnAutoMelee()
+        {
+            _meleeButton.PreventDeactivation();
+            _autoMeleeSubButtons.SetActive(true);
+            _multiMeleeButton.Blocked = true;
+            _scenarioButton.Blocked = false;
+            _instantMeleeButton.Blocked = false;
         }
 
         private void OnTraining()
@@ -198,6 +236,11 @@ namespace Assets.Scripts.Menus
         private void OnNewTrip()
         {
             StartCoroutine(LevelLoader.Instance.LoadLevel("t01.msn"));
+        }
+
+        private void OnScenario()
+        {
+            SceneManager.LoadScene("ScenarioMenu", LoadSceneMode.Single);
         }
 
         private void OnButtonActivated()
@@ -213,6 +256,8 @@ namespace Assets.Scripts.Menus
         {
             _tripSubButtons.SetActive(false);
             _meleeSubButtons.SetActive(false);
+            _multiMeleeSubButtons.SetActive(false);
+            _autoMeleeSubButtons.SetActive(false);
 
             int buttonCount = _buttons.Count;
             for (int i = 0; i < buttonCount; ++i)
@@ -247,6 +292,8 @@ namespace Assets.Scripts.Menus
                 return;
             }
 
+            VirtualFilesystem.Instance.ExtractAllMW2(@"C:\Users\admin\Desktop\i76files\mw2gog");
+
             AddBackground(menuBackground, Screen.width / 2, Screen.height / 2);
 
             for (int i = 0; i < menuImages.Length; ++i)
@@ -255,40 +302,74 @@ namespace Assets.Scripts.Menus
             }
             _textures.Add(menuBackground);
 
-            _buttons = new List<I76Button>
-            {
-                AddButton(Images.Trip_Normal, Images.Trip_Highlight, Images.Trip_SubText, 200, 310, OnTrip),
-                AddButton(Images.Melee_Normal, Images.Melee_Highlight, Images.Melee_SubText, 440, 310, OnMelee),
-                AddButton(Images.Options_Normal, Images.Options_Highlight, Images.Options_SubText, 65, 30, null),
-                AddButton(Images.Exit_Normal, Images.Exit_Highlight, Images.Exit_SubText, 595, 30, OnExit)
-            };
+            _buttons = new List<I76Button>();
 
+            AddButton(Images.Trip_Normal, Images.Trip_Highlight, Images.Trip_SubText, 200, 310, OnTrip);
+            _meleeButton = AddButton(Images.Melee_Normal, Images.Melee_Highlight, Images.Melee_SubText, 440, 310, OnMelee);
+            AddButton(Images.Options_Normal, Images.Options_Highlight, Images.Options_SubText, 65, 30, null);
+            AddButton(Images.Exit_Normal, Images.Exit_Highlight, Images.Exit_SubText, 595, 30, OnExit);
+            
             _tripSubButtons = new GameObject("Trip Buttons");
             RectTransform tripRectTransform = _tripSubButtons.AddComponent<RectTransform>();
             _tripSubButtons.SetActive(false);
             tripRectTransform.SetParent(MenuCanvasObject.transform);
-            tripRectTransform.anchorMin = new Vector2(0.0f, 0.0f);
-            tripRectTransform.anchorMax = new Vector2(0.0f, 0.0f);
-            tripRectTransform.pivot = new Vector2(0.0f, 0.0f);
+            tripRectTransform.anchorMin = new Vector2(0.5f, 0.0f);
+            tripRectTransform.anchorMax = new Vector2(0.5f, 0.0f);
+            tripRectTransform.pivot = new Vector2(0.5f, 0.0f);
             tripRectTransform.anchoredPosition = new Vector2(0.0f, 0.0f);
             tripRectTransform.sizeDelta = new Vector2(640.0f, 480.0f);
 
-            AddButton(Images.Training_Normal, Images.Training_Highlight, Images.Training_SubText, 100, 350, OnTraining).transform.SetParent(_tripSubButtons.transform);
-            AddButton(Images.NewTrip_Normal, Images.NewTrip_Highlight, Images.NewTrip_SubText, 170, 350, OnNewTrip).transform.SetParent(_tripSubButtons.transform);
-            AddButton(Images.LoadBookmark_Normal, Images.LoadBookmark_Highlight, Images.LoadBookmark_SubText, 265, 350, null).transform.SetParent(_tripSubButtons.transform);
-
+            _trainingButton = AddButton(Images.Training_Normal, Images.Training_Highlight, Images.Training_SubText, 100, 350, OnTraining);
+            _newTripButton = AddButton(Images.NewTrip_Normal, Images.NewTrip_Highlight, Images.NewTrip_SubText, 170, 350, OnNewTrip);
+            _bookmarkButton = AddButton(Images.LoadBookmark_Normal, Images.LoadBookmark_Highlight, Images.LoadBookmark_SubText, 265, 350, null);
+            _trainingButton.transform.SetParent(_tripSubButtons.transform);
+            _newTripButton.transform.SetParent(_tripSubButtons.transform);
+            _bookmarkButton.transform.SetParent(_tripSubButtons.transform);
+            
             _meleeSubButtons = new GameObject("Melee Buttons");
             RectTransform meleeRectTransform = _meleeSubButtons.AddComponent<RectTransform>();
             _meleeSubButtons.SetActive(false);
             meleeRectTransform.SetParent(MenuCanvasObject.transform);
-            meleeRectTransform.anchorMin = new Vector2(0.0f, 0.0f);
-            meleeRectTransform.anchorMax = new Vector2(0.0f, 0.0f);
-            meleeRectTransform.pivot = new Vector2(0.0f, 0.0f);
+            meleeRectTransform.anchorMin = new Vector2(0.5f, 0.0f);
+            meleeRectTransform.anchorMax = new Vector2(0.5f, 0.0f);
+            meleeRectTransform.pivot = new Vector2(0.5f, 0.0f);
             meleeRectTransform.anchoredPosition = new Vector2(0.0f, 0.0f);
             meleeRectTransform.sizeDelta = new Vector2(640.0f, 480.0f);
 
-            AddButton(Images.MultiMelee_Normal, Images.MultiMelee_Highlight, Images.MultiMelee_SubText, 390, 350, null).transform.SetParent(_meleeSubButtons.transform);
-            AddButton(Images.AutoMelee_Normal, Images.AutoMelee_Highlight, Images.AutoMelee_SubText, 475, 350, null).transform.SetParent(_meleeSubButtons.transform);
+            _multiMeleeButton = AddButton(Images.MultiMelee_Normal, Images.MultiMelee_Highlight, Images.MultiMelee_SubText, 390, 350, OnMultiMelee);
+            _autoMeleeButton = AddButton(Images.AutoMelee_Normal, Images.AutoMelee_Highlight, Images.AutoMelee_SubText, 475, 350, OnAutoMelee);
+            _multiMeleeButton.transform.SetParent(_meleeSubButtons.transform);
+            _autoMeleeButton.transform.SetParent(_meleeSubButtons.transform);
+            
+            _multiMeleeSubButtons = new GameObject("Multi Melee Buttons");
+            RectTransform multiMeleeRectTransform = _multiMeleeSubButtons.AddComponent<RectTransform>();
+            _multiMeleeSubButtons.SetActive(false);
+            multiMeleeRectTransform.SetParent(MenuCanvasObject.transform);
+            multiMeleeRectTransform.anchorMin = new Vector2(0.5f, 0.0f);
+            multiMeleeRectTransform.anchorMax = new Vector2(0.5f, 0.0f);
+            multiMeleeRectTransform.pivot = new Vector2(0.5f, 0.0f);
+            multiMeleeRectTransform.anchoredPosition = new Vector2(0.0f, 0.0f);
+            multiMeleeRectTransform.sizeDelta = new Vector2(640.0f, 480.0f);
+
+            _hostButton = AddButton(Images.Host_Normal, Images.Host_Highlight, Images.MultiMelee_SubText, 365, 375, null);
+            _joinButton = AddButton(Images.Join_Normal, Images.Join_Highlight, Images.MultiMelee_SubText, 410, 375, null);
+            _hostButton.transform.SetParent(_multiMeleeSubButtons.transform);
+            _joinButton.transform.SetParent(_multiMeleeSubButtons.transform);
+
+            _autoMeleeSubButtons = new GameObject("Auto Melee Buttons");
+            RectTransform autoMeleeRectTransform = _autoMeleeSubButtons.AddComponent<RectTransform>();
+            _autoMeleeSubButtons.SetActive(false);
+            autoMeleeRectTransform.SetParent(MenuCanvasObject.transform);
+            autoMeleeRectTransform.anchorMin = new Vector2(0.5f, 0.0f);
+            autoMeleeRectTransform.anchorMax = new Vector2(0.5f, 0.0f);
+            autoMeleeRectTransform.pivot = new Vector2(0.5f, 0.0f);
+            autoMeleeRectTransform.anchoredPosition = new Vector2(0.0f, 0.0f);
+            autoMeleeRectTransform.sizeDelta = new Vector2(640.0f, 480.0f);
+
+            _scenarioButton = AddButton(Images.Scenario_Normal, Images.Scenario_Highlight, Images.AutoMelee_SubText, 425, 375, OnScenario);
+            _instantMeleeButton = AddButton(Images.InstantMelee_Normal, Images.InstantMelee_Highlight, Images.AutoMelee_SubText, 515, 375, null);
+            _scenarioButton.transform.SetParent(_autoMeleeSubButtons.transform);
+            _instantMeleeButton.transform.SetParent(_autoMeleeSubButtons.transform);
         }
 
         private IEnumerator ShowIntro()

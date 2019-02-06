@@ -28,12 +28,12 @@ namespace Assets.Scripts.Menus
             _subTextObject = subTextObject;
 
             RectTransform rectTransform = _buttonImage.GetComponent<RectTransform>();
-            rectTransform.anchorMax = new Vector2(0.0f, 0.0f);
-            rectTransform.anchorMin = new Vector2(0.0f, 0.0f);
+            rectTransform.SetParent(parentTransform);
+            rectTransform.anchorMax = new Vector2(0.5f, 0.0f);
+            rectTransform.anchorMin = new Vector2(0.5f, 0.0f);
             rectTransform.pivot = new Vector2(0.5f, 0.5f);
             rectTransform.sizeDelta = new Vector2(normalTexture.width, normalTexture.height);
-            rectTransform.anchoredPosition = new Vector2(x, y);
-            rectTransform.SetParent(parentTransform);
+            rectTransform.anchoredPosition = new Vector2(x - 320f, 480f - y);
         }
 
         private void OnDestroy()
@@ -49,6 +49,19 @@ namespace Assets.Scripts.Menus
                 Destroy(_highlightSprite);
                 _highlightSprite = null;
             }
+        }
+        
+        public void PreventDeactivation()
+        {
+            _activeLastFrame = false;
+        }
+
+        private void OnDisable()
+        {
+            Blocked = false;
+            _activated = false;
+            _activeLastFrame = false;
+            _buttonImage.sprite = _normalSprite;
         }
 
         private void Update()
