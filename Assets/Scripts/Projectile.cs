@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Assets.Scripts
 {
-    public class Projectile : MonoBehaviour
+    public class Projectile : IFixedUpdateable
     {
         private const float MaxLifeTime = 10.0f;
 
@@ -14,6 +14,7 @@ namespace Assets.Scripts
         private Gdf _gdf;
         private Transform _transform;
         private Vector3 _lastPos;
+        private GameObject _gameObject;
 
         private enum ImpactType
         {
@@ -22,23 +23,29 @@ namespace Assets.Scripts
             Car
         }
 
+        public Projectile(GameObject gameObject)
+        {
+            _gameObject = gameObject;
+            _transform = gameObject.transform;
+            _lastPos = _transform.position;
+            gameObject.SetActive(true);
+            UpdateManager.Instance.AddFixedUpdateable(this);
+        }
+
         public void Initialise(Car owner, Gdf gdf)
         {
             _owner = owner;
             _gdf = gdf;
-            gameObject.SetActive(true);
-            _transform = transform;
-            _lastPos = _transform.position;
         }
         
-        private void FixedUpdate()
+        public void FixedUpdate()
         {
             float dt = Time.fixedDeltaTime;
 
             _lifeTime += dt;
             if (_lifeTime > MaxLifeTime)
             {
-                Destroy(gameObject);
+                Destroy();
             }
 
             _transform.Translate(Vector3.forward * _gdf.BulletVelocity * dt, Space.Self);
@@ -59,12 +66,17 @@ namespace Assets.Scripts
         private void CollisionCheck(ref RaycastHit hitInfo)
         {
             Transform other = hitInfo.transform;
-            WorldEntity entity = other.GetComponentInParent<WorldEntity>();
+            Rigidbody rigidBody = other.GetComponentInParent<Rigidbody>();
+            WorldEntity entity = null;
+            if (rigidBody != null)
+            {
+                entity = EntityManager.Instance.GetEntity(rigidBody.gameObject);
+            }
             
             if (entity != null)
             {
-                Transform entityTransform = entity.transform;
-                if (entityTransform == _owner.transform)
+                Transform entityTransform = entity.Transform;
+                if (entityTransform == _owner.Transform)
                 {
                     return;
                 }
@@ -85,7 +97,13 @@ namespace Assets.Scripts
                 CreateImpactEffect(ImpactType.Ground, hitInfo.point);
             }
 
-            Destroy(gameObject);
+            Destroy();
+        }
+
+        public void Destroy()
+        {
+            Object.Destroy(_gameObject);
+            UpdateManager.Instance.RemoveFixedUpdateable(this);
         }
 
         private void CreateImpactEffect(ImpactType type, Vector3 point)
@@ -120,7 +138,7 @@ namespace Assets.Scripts
                 return;
             }
 
-            effect.transform.position = point;
+            effect.Transform.position = point;
             effect.AutoDestroy = true;
             effect.Fire();
 
@@ -129,7 +147,7 @@ namespace Assets.Scripts
                 return;
             }
 
-            AudioSource audioSource = CacheManager.Instance.GetAudioSource(effect.gameObject, soundName);
+            AudioSource audioSource = CacheManager.Instance.GetAudioSource(effect.GameObject, soundName);
             if (audioSource != null)
             {
                 audioSource.Play();

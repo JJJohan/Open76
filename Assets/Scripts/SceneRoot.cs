@@ -18,6 +18,8 @@ namespace Assets.Scripts
         private AudioSource _audioSource1;
         private AudioSource _audioSource2;
         private AudioSource _lastAudioSource;
+        
+        public Sky Sky { get; private set; }
 
         public static SceneRoot Instance { get; private set; }
 
@@ -25,6 +27,7 @@ namespace Assets.Scripts
         {
             Instance = this;
             _game = Game.Instance;
+            Sky = new Sky();
 
             _audioSource1 = gameObject.AddComponent<AudioSource>();
             _audioSource1.spatialize = false;
@@ -53,9 +56,9 @@ namespace Assets.Scripts
             if (MissionFile.ToLower().StartsWith("m"))
             {
                 CacheManager cacheManager = CacheManager.Instance;
-                GameObject importedVcf = cacheManager.ImportVcf(VcfToLoad, true, out Vdf unused);
-                importedVcf.AddComponent<CarInput>();
-                importedVcf.AddComponent<Car>();
+                GameObject importedVcf = cacheManager.ImportVcf(VcfToLoad, true, out _, out _);
+
+                Car car = EntityManager.Instance.CreateEntity<Car>(importedVcf);
 
                 GameObject spawnPoint = GameObject.FindGameObjectsWithTag("Spawn")[0];
                 importedVcf.transform.position = spawnPoint.transform.position;
@@ -79,8 +82,43 @@ namespace Assets.Scripts
             targetSource.Play();
         }
 
+        private void Update()
+        {
+            if (_game.Paused)
+            {
+                return;
+            }
+
+            UpdateManager.Instance.Update();
+        }
+
+        private void LateUpdate()
+        {
+            if (_game.Paused)
+            {
+                return;
+            }
+
+            UpdateManager.Instance.LateUpdate();
+        }
+
+        private void FixedUpdate()
+        {
+            if (_game.Paused)
+            {
+                return;
+            }
+
+            UpdateManager.Instance.FixedUpdate();
+        }
+
         private void OnDestroy()
         {
+            Sky.Destroy();
+            _game.Destroy();
+            EntityManager.Instance.Destroy();
+            FSMRunner.Instance.Destroy();
+            UpdateManager.Instance.Destroy();
             Instance = null;
         }
     }

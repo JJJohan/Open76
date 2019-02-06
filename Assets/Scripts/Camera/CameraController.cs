@@ -36,11 +36,7 @@ namespace Assets.Scripts.Camera
 
             if (_player == null)
             {
-                Transform target = _smoothFollow.Target;
-                if (target != null)
-                {
-                    _player = target.GetComponent<Car>();
-                }
+                _player = Car.Player;
             }
             else
             {
@@ -117,7 +113,7 @@ namespace Assets.Scripts.Camera
 
         private void SetCameraAtWheelIndex(int wheelIndex)
         {
-            var suspensions = _player.GetComponentsInChildren<RaySusp>();
+            var suspensions = _player.GameObject.GetComponentsInChildren<RaySusp>();
             if(wheelIndex < suspensions.Length)
             {
                 var wheel = suspensions[wheelIndex].transform;
@@ -132,7 +128,7 @@ namespace Assets.Scripts.Camera
 
         private void SetCameraThirdPerson()
         {
-            _smoothFollow.Target = _player.transform;
+            _smoothFollow.Target = _player.Transform;
             _smoothFollow.enabled = true;
             transform.parent = null;
 
@@ -143,7 +139,7 @@ namespace Assets.Scripts.Camera
         {
             int i = 0;
             Transform vloc = null;
-            foreach (Transform child in _player.transform)
+            foreach (Transform child in _player.Transform)
             {
                 if (child.name == "VLOC")
                 {
@@ -169,13 +165,13 @@ namespace Assets.Scripts.Camera
 
         private void SetVisibleChassisModel(ChassisView chassisView)
         {
-            var thirdPerson = _player.transform.Find("Chassis/ThirdPerson");
+            var thirdPerson = _player.Transform.Find("Chassis/ThirdPerson");
             thirdPerson.gameObject.SetActive(chassisView == ChassisView.ThirdPerson);
 
-            var firstPerson = _player.transform.Find("Chassis/FirstPerson");
+            var firstPerson = _player.Transform.Find("Chassis/FirstPerson");
             firstPerson.gameObject.SetActive(chassisView == ChassisView.FirstPerson);
 
-            var suspensions = _player.GetComponentsInChildren<RaySusp>();
+            var suspensions = _player.GameObject.GetComponentsInChildren<RaySusp>();
             foreach (var suspension in suspensions)
             {
                 suspension.SetWheelVisibile(chassisView == ChassisView.ThirdPerson);

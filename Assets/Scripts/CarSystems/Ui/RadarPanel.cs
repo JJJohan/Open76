@@ -99,7 +99,7 @@ namespace Assets.Scripts.CarSystems.Ui
             _longRange = true;
             _car = car;
             _radarContacts = new Dictionary<Car, RadarContact>();
-            _radarAudio = _car.gameObject.AddComponent<AudioSource>();
+            _radarAudio = _car.GameObject.AddComponent<AudioSource>();
             _radarAudio.playOnAwake = false;
             _radarAudio.volume = 0.2f;
 
@@ -150,19 +150,19 @@ namespace Assets.Scripts.CarSystems.Ui
         public void Update()
         {
             float radarRange = _longRange ? LongRangeRadius : ShortRangeRadius;
-            Vector3 pos = _car.transform.position;
+            Vector3 pos = _car.Transform.position;
 
-            List<Car> cars = EntityManager.Instance.Cars;
-            int carCount = cars.Count;
-            for (int i = 0; i < carCount; ++i)
+            List<WorldEntity> entities = EntityManager.Instance.Entities;
+            int entityCount = entities.Count;
+            for (int i = 0; i < entityCount; ++i)
             {
-                Car car = cars[i];
-                if (car == _car)
+                Car car = entities[i] as Car;
+                if (car == null || car == _car)
                 {
                     continue;
                 }
 
-                Vector3 carPos = car.transform.position;
+                Vector3 carPos = car.Transform.position;
                 float distance = Vector3.Distance(carPos, pos);
                 if (distance < radarRange)
                 {
@@ -225,7 +225,7 @@ namespace Assets.Scripts.CarSystems.Ui
                 RadarContact contact = radarContact.Value;
 
                 // Rotate radar contact points based on car's facing direction.
-                contact.Normal = Utils.RotateVector(contact.Normal, _car.transform.eulerAngles.y + 180f);
+                contact.Normal = Utils.RotateVector(contact.Normal, _car.Transform.eulerAngles.y + 180f);
 
                 Vector2 radarOffset;
                 radarOffset.x = RadarCenre.x + contact.Normal.x * contact.Distance * pixelFactor;

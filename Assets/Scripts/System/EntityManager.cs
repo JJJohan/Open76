@@ -1,54 +1,99 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Reflection;
 using Assets.Scripts.Entities;
+using UnityEngine;
 
 namespace Assets.Scripts.System
 {
     public class EntityManager
     {
+        public delegate T GameObjectConstructor<T>(GameObject gameObject);
+
         private static EntityManager _instance;
         public static EntityManager Instance
         {
             get { return _instance ?? (_instance = new EntityManager()); }
         }
 
-        public List<Car> Cars { get; }
+        public List<WorldEntity> Entities { get; }
 
-        private readonly Dictionary<int, Car> _carLookup;
+        private readonly Dictionary<int, WorldEntity> _entityLookup;
+        private readonly Dictionary<GameObject, WorldEntity> _gameObjectLookup;
 
         private EntityManager()
         {
-            Cars = new List<Car>();
-            _carLookup = new Dictionary<int, Car>();
+            Entities = new List<WorldEntity>();
+            _entityLookup = new Dictionary<int, WorldEntity>();
+            _gameObjectLookup = new Dictionary<GameObject, WorldEntity>();
         }
         
-        public void RegisterCar(Car car)
+        public T CreateEntity<T>(GameObject gameObject) where T : WorldEntity
         {
-            if (!_carLookup.ContainsKey(car.Id))
-            {
-                _carLookup.Add(car.Id, car);
-            }
+            Type entityType = typeof(T);
 
-            Cars.Add(car);
+            ConstructorInfo constructorInfo = entityType.GetConstructor(new [] {typeof(GameObject)});
+            ParameterExpression paramExpr = Expression.Parameter(typeof(GameObject));
+            NewExpression body = Expression.New(constructorInfo, paramExpr);
+
+            Expression<GameObjectConstructor<T>> constructor = Expression.Lambda<GameObjectConstructor<T>>(body, paramExpr);
+            GameObjectConstructor<T> constructorDelegate = constructor.Compile();
+            T entity = constructorDelegate(gameObject);
+
+            Entities.Add(entity);
+            _gameObjectLookup.Add(gameObject, entity);
+            return entity;
         }
 
-        public void UnregisterCar(Car car)
+        public void Destroy()
         {
-            if (_carLookup.ContainsKey(car.Id))
+            for (int i = Entities.Count - 1; i >= 0; --i)
             {
-                _carLookup.Remove(car.Id);
+                Entities[i].Destroy();
             }
 
-            Cars.Remove(car);
+            _gameObjectLookup.Clear();
+            _entityLookup.Clear();
+            Entities.Clear();
+            _instance = null;
         }
 
-        public Car GetCar(int id)
+        public void RegisterId(WorldEntity entity)
         {
-            if (!_carLookup.TryGetValue(id, out Car car))
+            _entityLookup.Add(entity.Id, entity);
+        }
+
+        public void RemoveEntity(WorldEntity entity)
+        {
+            if (_entityLookup.ContainsKey(entity.Id))
+            {
+                _entityLookup.Remove(entity.Id);
+            }
+
+            _gameObjectLookup.Remove(entity.GameObject);
+            Entities.Remove(entity);
+            entity.Destroy();
+        }
+
+        public WorldEntity GetEntity(int id)
+        {
+            if (!_entityLookup.TryGetValue(id, out WorldEntity entity))
             {
                 return null;
             }
 
-            return car;
+            return entity;
+        }
+
+        public WorldEntity GetEntity(GameObject gameObject)
+        {
+            if (!_gameObjectLookup.TryGetValue(gameObject, out WorldEntity entity))
+            {
+                return null;
+            }
+
+            return entity;
         }
     }
 }

@@ -10,7 +10,7 @@ namespace Assets.Scripts
     {
         public string GamePath;
 
-        private GameObject _currentObject;
+        private Effect _currentEffect;
         private CacheManager _cacheManager;
 
         public Transform ButtonPrefab;
@@ -45,14 +45,16 @@ namespace Assets.Scripts
 
         private void LoadXDF(string filename)
         {
-            if (_currentObject != null)
-                Destroy(_currentObject);
+            if (_currentEffect != null)
+            {
+                _currentEffect.Destroy();
+            }
 
             Effect effect = _cacheManager.ImportXdf(filename, transform);
             effect.Loop = LoopEffects;
             effect.Fire();
 
-            _currentObject = effect.gameObject;
+            _currentEffect = effect;
             _cacheManager.ClearCache();
         }
     }

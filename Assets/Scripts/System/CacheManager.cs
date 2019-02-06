@@ -63,7 +63,6 @@ namespace Assets.Scripts.System
             _steerWheelPrefab = Resources.Load<RaySusp>("Prefabs/SteerWheelPrefab");
             _driveWheelPrefab = Resources.Load<RaySusp>("Prefabs/DriveWheelPrefab");
             _carBodyPrefab = Resources.Load<GameObject>("Prefabs/CarBodyPrefab");
-            _carPrefab = Resources.Load<Car>("Prefabs/CarPrefab");
 
             VirtualFilesystem.Instance.Init();
             _materialCache["default"] = Object.Instantiate(_textureMaterialPrefab);
@@ -368,7 +367,7 @@ namespace Assets.Scripts.System
             xdfObject.transform.localPosition = Vector3.zero;
             xdfObject.transform.localRotation = Quaternion.identity;
 
-            Effect effect = xdfObject.AddComponent<Effect>();
+            Effect effect = new Effect(xdfObject);
             effect.Initialise(xdf);
             
             Dictionary<string, GameObject> partDict = new Dictionary<string, GameObject> { { "WORLD", xdfObject } };
@@ -435,26 +434,25 @@ namespace Assets.Scripts.System
             return sdfObject;
         }
 
-        public GameObject ImportVcf(string filename, bool importFirstPerson, out Vdf vdf)
+        public GameObject ImportVcf(string filename, bool importFirstPerson, out Car car, out Vdf vdf)
         {
             Vcf vcf = VcfParser.ParseVcf(filename);
             vdf = VdfParser.ParseVdf(vcf.VdfFilename);
             Vtf vtf = VtfParser.ParseVtf(vcf.VtfFilename);
 
-            Car carObject = Object.Instantiate(_carPrefab);
-            carObject.Configure(vdf, vcf);
-            carObject.gameObject.name = vdf.Name + " (" + vcf.VariantName + ")";
+            GameObject carObject = new GameObject(vdf.Name + " (" + vcf.VariantName + ")");
+            car = EntityManager.Instance.CreateEntity<Car>(carObject);
 
             foreach (VLoc vLoc in vdf.VLocs)
             {
                 GameObject vlocGo = new GameObject("VLOC");
-                vlocGo.transform.parent = carObject.transform;
+                vlocGo.transform.parent = car.Transform;
                 vlocGo.transform.localRotation = Quaternion.LookRotation(vLoc.Forward, vLoc.Up);
                 vlocGo.transform.localPosition = vLoc.Position;
             }
 
             GameObject chassis = new GameObject("Chassis");
-            chassis.transform.parent = carObject.transform;
+            chassis.transform.parent = car.Transform;
 
             GameObject thirdPerson = new GameObject("ThirdPerson");
             thirdPerson.transform.parent = chassis.transform;
@@ -494,7 +492,7 @@ namespace Assets.Scripts.System
             }
 
             GameObject chassisCollider = new GameObject("ChassisColliders");
-            chassisCollider.transform.parent = carObject.transform;
+            chassisCollider.transform.parent = car.Transform;
             ImportCarParts(partDict, chassisCollider, vtf, vdf.PartsThirdPerson[0], _carBodyPrefab, true);
             
             for (int i = 0; i < vcf.Weapons.Count; ++i)
@@ -548,7 +546,7 @@ namespace Assets.Scripts.System
                     weapon.Transform = chassis.transform;
                 }
             }
-
+            
             // Note: The following is probably how I76 does collision detection. Two large boxes that encapsulate the entire vehicle.
             // Right now this won't work with Open76's raycast suspension, so I'm leaving this off for now. Investigate in the future.
             //var innerBox = chassisCollider.AddComponent<BoxCollider>();
@@ -562,19 +560,19 @@ namespace Assets.Scripts.System
             RaySusp[] frontWheels = null;
             if (vcf.FrontWheelDef != null)
             {
-                frontWheels = CreateWheelPair(partDict, "Front", 0, carObject.gameObject, vdf, vtf, vcf.FrontWheelDef);
-                carObject.Movement.FrontWheels = frontWheels;
+                frontWheels = CreateWheelPair(partDict, "Front", 0, carObject, vdf, vtf, vcf.FrontWheelDef);
+                car.Movement.FrontWheels = frontWheels;
             }
             if (vcf.MidWheelDef != null)
             {
-                CreateWheelPair(partDict, "Mid", 2, carObject.gameObject, vdf, vtf, vcf.MidWheelDef);
+                CreateWheelPair(partDict, "Mid", 2, carObject, vdf, vtf, vcf.MidWheelDef);
             }
 
             RaySusp[] rearWheels = null;
             if (vcf.BackWheelDef != null)
             {
-                rearWheels = CreateWheelPair(partDict, "Back", 4, carObject.gameObject, vdf, vtf, vcf.BackWheelDef);
-                carObject.Movement.RearWheels = rearWheels;
+                rearWheels = CreateWheelPair(partDict, "Back", 4, carObject, vdf, vtf, vcf.BackWheelDef);
+                car.Movement.RearWheels = rearWheels;
             }
             
             if (importFirstPerson)
@@ -583,13 +581,14 @@ namespace Assets.Scripts.System
                 firstPerson.transform.parent = chassis.transform;
                 ImportCarParts(partDict, firstPerson, vtf, vdf.PartsFirstPerson, _noColliderPrefab, false, true, 0, LayerMask.NameToLayer("FirstPerson"));
 
-                carObject.InitPanels();
+                car.InitPanels();
                 firstPerson.SetActive(false);
             }
 
-            carObject.Movement.Initialise(chassis.transform, frontWheels, rearWheels);
-            
-            return carObject.gameObject;
+            car.Movement.Initialise(chassis.transform, frontWheels, rearWheels);
+            car.Configure(vdf, vcf);
+
+            return carObject;
         }
 
         private RaySusp[] CreateWheelPair(Dictionary<string, GameObject> partDict, string placement, int wheelIndex, GameObject car, Vdf vdf, Vtf vtf, Wdf wheelDef)

@@ -107,7 +107,7 @@ namespace Assets.Scripts.System
 
                 if (radioData.Owner != -1)
                 {
-                    Car car = EntityManager.Instance.GetCar(radioData.Owner);
+                    Car car = EntityManager.Instance.GetEntity(radioData.Owner) as Car;
                     if (car == null || !car.Alive)
                     {
                         return;

@@ -1,10 +1,8 @@
 ﻿using System;
-using Assets.Scripts.I76Types;
-using UnityEngine;
 
 namespace Assets.Scripts.System
 {
-    public class FSMRunner : MonoBehaviour
+    public class FSMRunner : ILateUpdateable
     {
         private static FSMRunner _instance;
         public static FSMRunner Instance
@@ -13,7 +11,7 @@ namespace Assets.Scripts.System
             {
                 if (_instance == null)
                 {
-                    _instance = FindObjectOfType<FSMRunner>();
+                    _instance = new FSMRunner();
                 }
 
                 return _instance;
@@ -25,34 +23,21 @@ namespace Assets.Scripts.System
         public FSM FSM;
         private FSMActionDelegator _actionDelegator;
         
-        private void Awake()
+        private FSMRunner()
         {
             Timers = new float[10];
             _actionDelegator = new FSMActionDelegator();
+            UpdateManager.Instance.AddLateUpdateable(this);
         }
 
-        private void OnDrawGizmos()
+        public void Destroy()
         {
-            Gizmos.color = Color.yellow;
-            GameObject world = GameObject.Find("World");
-            if (world == null) return;
-
-            Vector3 worldPos = world.transform.position;
-
-            FSMPath[] paths = FSM.Paths;
-            for (int i = 0; i < paths.Length; ++i)
-            {
-                FSMPath path = paths[i];
-                for (int j = 0; j < path.Nodes.Length - 1; ++j)
-                {
-                    Gizmos.DrawLine(worldPos + path.Nodes[j].ToVector3(), worldPos + path.Nodes[j + 1].ToVector3());
-                }
-            }
+            UpdateManager.Instance.RemoveLateUpdateable(this);
         }
 
-        private void LateUpdate()
+        public void LateUpdate()
         {
-            if (FSM == null || Game.Instance.Paused)
+            if (FSM == null)
             {
                 return;
             }

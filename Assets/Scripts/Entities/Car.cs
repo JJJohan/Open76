@@ -1,5 +1,4 @@
-﻿using System;
-using Assets.Scripts.Camera;
+﻿using Assets.Scripts.Camera;
 using Assets.Scripts.CarSystems;
 using Assets.Scripts.CarSystems.Ui;
 using Assets.Scripts.System;
@@ -15,7 +14,7 @@ namespace Assets.Scripts.Entities
         Force
     }
 
-    public class Car : WorldEntity
+    public class Car : WorldEntity, IUpdateable
     {
         public static bool FireWeapons;
 
@@ -23,7 +22,6 @@ namespace Assets.Scripts.Entities
         private const int CoreStartHealth = 250; // TODO: Figure out where this is stored?
         private const int TireStartHealth = 100; // TODO: Parse.
 
-        private Transform _transform;
         private Rigidbody _rigidBody;
 
         public WeaponsController WeaponsController;
@@ -31,6 +29,7 @@ namespace Assets.Scripts.Entities
         public SystemsPanel SystemsPanel;
         public GearPanel GearPanel;
         public RadarPanel RadarPanel;
+        private CarInput _carInput;
         private CompassPanel _compassPanel;
         private CameraController _camera;
         private int _vehicleHealthGroups;
@@ -39,10 +38,10 @@ namespace Assets.Scripts.Entities
         private AudioSource _engineLoopSound;
         private bool _engineStarting;
         private float _engineStartTimer;
-        private GameObject _gameObject;
         private CacheManager _cacheManager;
         private int[] _vehicleHitPoints;
         private int[] _vehicleStartHitPoints;
+        private bool _isPlayer;
 
         public static Car Player { get; set; }
 
@@ -60,12 +59,29 @@ namespace Assets.Scripts.Entities
 
         public bool Attacked { get; private set; }
         public int TeamId { get; set; }
-        public bool IsPlayer { get; set; }
         public int Skill1 { get; set; }
         public int Skill2 { get; set; }
         public int Aggressiveness { get; set; }
         public CarPhysics Movement { get; private set; }
         public CarAI AI { get; private set; }
+
+        public bool IsPlayer
+        {
+            get { return _isPlayer; }
+            set
+            {
+                if (_isPlayer == value)
+                {
+                    return;
+                }
+
+                _isPlayer = value;
+                if (_isPlayer)
+                {
+                    _carInput = new CarInput(this);
+                }
+            }
+        }
 
         private int GetComponentHealth(SystemType healthType)
         {
@@ -218,7 +234,7 @@ namespace Assets.Scripts.Entities
                     }
                     break;
                 default:
-                    throw new NotSupportedException("Invalid damage type.");
+                    throw new UnityException("Invalid damage type.");
             }
 
             int currentHealth = GetComponentHealth(system);
@@ -245,23 +261,34 @@ namespace Assets.Scripts.Entities
             }
         }
 
-        private void Awake()
+        public Car(GameObject gameObject) : base(gameObject)
         {
-            _transform = transform;
-            _gameObject = gameObject;
+            _rigidBody = GameObject.AddComponent<Rigidbody>();
+            _rigidBody.mass = 100;
+            _rigidBody.drag = 0.2f;
+            _rigidBody.angularDrag = 0.1f;
+            _rigidBody.useGravity = true;
+            _rigidBody.interpolation = RigidbodyInterpolation.Interpolate;
+            _rigidBody.collisionDetectionMode = CollisionDetectionMode.Continuous;
+
             _cacheManager = CacheManager.Instance;
             Movement = new CarPhysics(this);
             AI = new CarAI(this);
             _camera = CameraManager.Instance.MainCamera.GetComponent<CameraController>();
-            _rigidBody = GetComponent<Rigidbody>();
-            EngineRunning = true;
-            _currentVehicleHealthGroup = 1;
         }
 
         public void Configure(Vdf vdf, Vcf vcf)
         {
             Vdf = vdf;
             Vcf = vcf;
+
+            EngineRunning = true;
+            _currentVehicleHealthGroup = 1;
+            UpdateManager.Instance.AddUpdateable(this);
+
+            Transform firstPersonTransform = Transform.Find("Chassis/FirstPerson");
+            WeaponsController = new WeaponsController(this, Vcf, firstPersonTransform);
+            SpecialsController = new SpecialsController(Vcf, firstPersonTransform);
 
             _vehicleHealthGroups = Vdf.PartsThirdPerson.Count;
 
@@ -293,29 +320,20 @@ namespace Assets.Scripts.Entities
             {
                 _vehicleHitPoints[i] = _vehicleStartHitPoints[i];
             }
-        }
-
-        private void Start()
-        {
-            EntityManager.Instance.RegisterCar(this);
 
             UpdateEngineSounds();
-
-            Transform firstPersonTransform = _transform.Find("Chassis/FirstPerson");
-            WeaponsController = new WeaponsController(this, Vcf, firstPersonTransform);
-            SpecialsController = new SpecialsController(Vcf, firstPersonTransform);
         }
-
+        
         public void InitPanels()
         {
-            Transform firstPersonTransform = _transform.Find("Chassis/FirstPerson");
+            Transform firstPersonTransform = Transform.Find("Chassis/FirstPerson");
             SystemsPanel = new SystemsPanel(firstPersonTransform);
             GearPanel = new GearPanel(firstPersonTransform);
             _compassPanel = new CompassPanel(firstPersonTransform);
             RadarPanel = new RadarPanel(this, firstPersonTransform);
         }
 
-        private void Update()
+        public void Update()
         {
             if (!Alive)
             {
@@ -352,14 +370,19 @@ namespace Assets.Scripts.Entities
                     _engineStartTimer = 0f;
                 }
             }
-            
+
+            if (_carInput != null)
+            {
+                _carInput.Update();
+            }
+
             Movement.Update();
 
             if (_camera.FirstPerson)
             {
                 if (_compassPanel != null)
                 {
-                    _compassPanel.UpdateCompassHeading(_transform.eulerAngles.y);
+                    _compassPanel.UpdateCompassHeading(Transform.eulerAngles.y);
                 }
             }
             
@@ -394,7 +417,7 @@ namespace Assets.Scripts.Entities
         private void SetHealthGroup(int healthGroupIndex)
         {
             _currentVehicleHealthGroup = healthGroupIndex;
-            Transform parent = transform.Find("Chassis/ThirdPerson");
+            Transform parent = Transform.Find("Chassis/ThirdPerson");
             for (int i = 0; i < _vehicleHealthGroups; ++i)
             {
                 Transform child = parent.Find("Health " + i);
@@ -405,14 +428,8 @@ namespace Assets.Scripts.Entities
         private void Explode()
         {
             _rigidBody.AddForce(Vector3.up * _rigidBody.mass * 5f, ForceMode.Impulse);
-
-            CarInput carInputController = GetComponent<CarInput>();
-            if (carInputController != null)
-            {
-                Destroy(carInputController);
-            }
-
-            AudioSource explosionSource = _cacheManager.GetAudioSource(_gameObject, "xcar");
+            
+            AudioSource explosionSource = _cacheManager.GetAudioSource(GameObject, "xcar");
             if (explosionSource != null)
             {
                 explosionSource.volume = 0.9f;
@@ -420,8 +437,8 @@ namespace Assets.Scripts.Entities
             }
 
             EngineRunning = false;
-            Destroy(_engineLoopSound);
-            Destroy(_engineStartSound);
+            Object.Destroy(_engineLoopSound);
+            Object.Destroy(_engineStartSound);
 
             Movement.Destroy();
             Movement = null;
@@ -434,10 +451,10 @@ namespace Assets.Scripts.Entities
             _compassPanel = null;
             RadarPanel = null;
 
-            Destroy(transform.Find("FrontLeft").gameObject);
-            Destroy(transform.Find("FrontRight").gameObject);
-            Destroy(transform.Find("BackLeft").gameObject);
-            Destroy(transform.Find("BackRight").gameObject);
+            Object.Destroy(Transform.Find("FrontLeft").gameObject);
+            Object.Destroy(Transform.Find("FrontRight").gameObject);
+            Object.Destroy(Transform.Find("BackLeft").gameObject);
+            Object.Destroy(Transform.Find("BackRight").gameObject);
         }
 
         public void Kill()
@@ -451,22 +468,15 @@ namespace Assets.Scripts.Entities
             AI.Sit();
         }
 
-        private void OnDrawGizmos()
+        public override void Destroy()
         {
-            if (AI != null)
-            {
-                AI.DrawGizmos();
-            }
-        }
-
-        private void OnDestroy()
-        {
-            EntityManager.Instance.UnregisterCar(this);
+            UpdateManager.Instance.RemoveUpdateable(this);
+            base.Destroy();
         }
 
         public void SetSpeed(int targetSpeed)
         {
-            _rigidBody.velocity = _transform.forward * targetSpeed;
+            _rigidBody.velocity = Transform.forward * targetSpeed;
         }
 
         public bool AtFollowTarget()
@@ -550,10 +560,10 @@ namespace Assets.Scripts.Entities
             {
                 if (_engineStartSound != null)
                 {
-                    Destroy(_engineStartSound);
+                    Object.Destroy(_engineStartSound);
                 }
 
-                _engineStartSound = _cacheManager.GetAudioSource(_gameObject, engineStartSound);
+                _engineStartSound = _cacheManager.GetAudioSource(GameObject, engineStartSound);
                 if (_engineStartSound != null)
                 {
                     _engineStartSound.volume = 0.6f;
@@ -564,10 +574,10 @@ namespace Assets.Scripts.Entities
             {
                 if (_engineLoopSound != null)
                 {
-                    Destroy(_engineLoopSound);
+                    Object.Destroy(_engineLoopSound);
                 }
 
-                _engineLoopSound = _cacheManager.GetAudioSource(_gameObject, engineLoopSound);
+                _engineLoopSound = _cacheManager.GetAudioSource(GameObject, engineLoopSound);
                 if (_engineLoopSound != null)
                 {
                     _engineLoopSound.loop = true;

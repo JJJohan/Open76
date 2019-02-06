@@ -35,9 +35,9 @@ namespace Assets.Scripts.CarSystems
         public CarAI(Car controller)
         {
             _controller = controller;
-            _transform = _controller.transform;
+            _transform = _controller.Transform;
             _movement = controller.Movement;
-            _rigidBody = _controller.GetComponent<Rigidbody>();
+            _rigidBody = _controller.GameObject.GetComponent<Rigidbody>();
             _worldTransform = GameObject.Find("World").transform;
         }
 
@@ -78,8 +78,8 @@ namespace Assets.Scripts.CarSystems
             if (_followTarget != null)
             {
                 Vector3 localPos = _transform.position;
-                Vector3 carPos = _followTarget.transform.position;
-                Vector3 direction = _followTarget.transform.forward;
+                Vector3 carPos = _followTarget.Transform.position;
+                Vector3 direction = _followTarget.Transform.forward;
                 _targetPos.x = carPos.x + direction.x * 20f;
                 _targetPos.y = carPos.z + direction.z * 20f;
 
@@ -203,7 +203,7 @@ namespace Assets.Scripts.CarSystems
             Vector2 segmentVector;
             if (_followXOffset != 0 && _followTarget != null)
             {
-                Vector3 relativeRight = Vector3.Cross(Vector3.up, (_followTarget.transform.position - _transform.position).normalized) * _followXOffset * 0.5f;
+                Vector3 relativeRight = Vector3.Cross(Vector3.up, (_followTarget.Transform.position - _transform.position).normalized) * _followXOffset * 0.5f;
                 segmentVector = ((_targetRoadSegment + new Vector2(relativeRight.x, relativeRight.z)) - pos2D).normalized;
             }
             else
@@ -235,8 +235,8 @@ namespace Assets.Scripts.CarSystems
                 return false;
             }
 
-            Vector3 offset = _followTarget.transform.forward * 20f;
-            float distance = Vector3.Distance(_transform.position, _followTarget.transform.position + offset);
+            Vector3 offset = _followTarget.Transform.forward * 20f;
+            float distance = Vector3.Distance(_transform.position, _followTarget.Transform.position + offset);
             return distance < FollowDistanceTreshold;
         }
 

@@ -16,7 +16,11 @@ namespace Assets.Scripts.Entities
             get { return _health > 0; }
         }
 
-        public void Initialise(Sdf sdf, GameObject wreckedObject)
+        public Building(GameObject gameObject) : base(gameObject)
+        {
+        }
+
+        public void Initialise( Sdf sdf, GameObject wreckedObject)
         {
             _sdf = sdf;
             _health = (int)sdf.Health;
@@ -37,7 +41,7 @@ namespace Assets.Scripts.Entities
 
                 if (!string.IsNullOrEmpty(_sdf.DestroySoundName))
                 {
-                    AudioSource source = CacheManager.Instance.GetAudioSource(gameObject, _sdf.DestroySoundName);
+                    AudioSource source = CacheManager.Instance.GetAudioSource(GameObject, _sdf.DestroySoundName);
                     if (source != null)
                     {
                         source.Play();
@@ -46,7 +50,7 @@ namespace Assets.Scripts.Entities
 
                 if (_wreckedObject != null)
                 {
-                    foreach (Transform child in transform)
+                    foreach (Transform child in Transform)
                     {
                         child.gameObject.SetActive(false);
                     }

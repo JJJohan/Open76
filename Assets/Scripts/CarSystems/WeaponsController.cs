@@ -26,7 +26,7 @@ namespace Assets.Scripts.CarSystems
             _car = car;
             int weaponCount = vcf.Weapons.Count;
             _weapons = new Weapon[weaponCount];
-            _weaponAudio = car.gameObject.AddComponent<AudioSource>();
+            _weaponAudio = car.GameObject.AddComponent<AudioSource>();
             _weaponAudio.volume = 0.5f;
             _weaponEmptySound = CacheManager.Instance.GetAudioClip("cammo.gpw");
             _weaponBrokenSound = CacheManager.Instance.GetAudioClip("cwstat.gpw");
@@ -161,7 +161,7 @@ namespace Assets.Scripts.CarSystems
 
                 if (weapon.Gdf.FireAmount > 1)
                 {
-                    _car.StartCoroutine(BurstFire(weapon));
+                    SceneRoot.Instance.StartCoroutine(BurstFire(weapon));
                 }
                 else
                 {
@@ -173,7 +173,7 @@ namespace Assets.Scripts.CarSystems
         private void FireWeapon(Weapon weapon)
         {
             GameObject projObj = Object.Instantiate(weapon.ProjectilePrefab, weapon.Transform.position, weapon.Transform.rotation);
-            Projectile projectile = projObj.GetComponent<Projectile>();
+            Projectile projectile = new Projectile(projObj);
             projectile.Initialise(_car, weapon.Gdf);
 
             weapon.LastFireTime = Time.time;

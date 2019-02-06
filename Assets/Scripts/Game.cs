@@ -51,6 +51,19 @@ namespace Assets.Scripts
 
                 _paused = value;
                 Time.timeScale = _paused ? 0f : 1f;
+
+                AudioSource[] audioSources = Object.FindObjectsOfType<AudioSource>();
+                for (int i = 0; i < audioSources.Length; ++i)
+                {
+                    if (_paused)
+                    {
+                        audioSources[i].Pause();
+                    }
+                    else
+                    {
+                        audioSources[i].UnPause();
+                    }
+                }
             }
         }
 
@@ -87,7 +100,7 @@ namespace Assets.Scripts
             yield return new WaitForSeconds(secondsToGameOver);
 
             // TODO: Show game over screen.
-            Debug.Log(failMessage);
+            Debug.Log("Fail Message: " + failMessage);
         }
 
         public void RevealObjective(int objectiveIndex)
@@ -187,6 +200,15 @@ namespace Assets.Scripts
 
             MapFileName = missionDefinition.LevelMapFilePath;
             ParseObjectives(missionDefinition.ObjectiveFilePath);
+        }
+
+        public void Destroy()
+        {
+            _objectives.Clear();
+            _failMessages.Clear();
+            _objectives = null;
+            _failMessages = null;
+            _instance = null;
         }
 
         private Game()

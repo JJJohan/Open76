@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Assets.Scripts
 {
-    public class Effect : MonoBehaviour
+    public class Effect : IFixedUpdateable
     {
         private const float FrameRate = 1f / 25f; // Haven't found a consistent value in XDF that resembles framerate.
         private const float Scale = 2f; // Scale seems far too small at 1.0x
@@ -22,22 +22,25 @@ namespace Assets.Scripts
         private float _currentTime;
         private int _frameIndex;
         private int _effectCount;
-        private Transform _transform;
 
         public bool Loop { get; set; } // Only used for debugging / XDF viewer scene.
         public bool AutoDestroy { get; set; }
+        public Transform Transform { get; private set; }
+        public GameObject GameObject { get; private set; }
 
-        private void Awake()
+        public Effect(GameObject gameObject)
         {
+            GameObject = gameObject;
             _effectPairs = new List<EffectPair>();
-            _transform = transform;
+            Transform = gameObject.transform;
+            UpdateManager.Instance.AddFixedUpdateable(this);
         }
 
         public void Initialise(Xdf xdf)
         {
             _frameRate = FrameRate;
             _frameCount = xdf.Frames;
-            gameObject.SetActive(false);
+            GameObject.SetActive(false);
         }
 
         public void AddPart(MeshRenderer partRenderer, Material[] materials)
@@ -56,13 +59,13 @@ namespace Assets.Scripts
             _currentTime = 0f;
             _frameIndex = 0;
             UpdateMaterial();
-            gameObject.SetActive(true);
-            _transform.localScale = new Vector3(Scale, Scale, Scale);
+            GameObject.SetActive(true);
+            Transform.localScale = new Vector3(Scale, Scale, Scale);
 						
             Car playerCar = Car.Player;
             if (playerCar != null)
             {
-                _transform.LookAt(playerCar.transform);
+                Transform.LookAt(playerCar.Transform);
             }
         }
 
@@ -74,7 +77,7 @@ namespace Assets.Scripts
             }
         }
 
-        private void FixedUpdate()
+        public void FixedUpdate()
         {
             float dt = Time.fixedDeltaTime;
             _currentTime += dt;
@@ -93,13 +96,19 @@ namespace Assets.Scripts
             {
                 if (AutoDestroy)
                 {
-                    Destroy(gameObject);
+                    Destroy();
                 }
                 else
                 {
-                    gameObject.SetActive(false);
+                    GameObject.SetActive(false);
                 }
             }
+        }
+
+        public void Destroy()
+        {
+            Object.Destroy(GameObject);
+            UpdateManager.Instance.RemoveFixedUpdateable(this);
         }
     }
 }

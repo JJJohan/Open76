@@ -7,7 +7,7 @@ using Random = UnityEngine.Random;
 
 namespace Assets.Scripts.CarSystems
 {
-    public class CarPhysics
+    public class CarPhysics : IFixedUpdateable
     {
         private const float AirTimeLandingTreshold = 0.75f;
         private readonly Rigidbody _rigidbody;
@@ -65,9 +65,9 @@ namespace Assets.Scripts.CarSystems
 
         public CarPhysics(Car controller)
         {
-            _transform = controller.transform;
-            _rigidbody = controller.GetComponent<Rigidbody>();
-            _gameObject = controller.gameObject;
+            _transform = controller.Transform;
+            _gameObject = controller.GameObject;
+            _rigidbody = _gameObject.GetComponent<Rigidbody>();
         }
 
         public void Initialise(Transform chassisTransform, RaySusp[] frontWheels, RaySusp[] rearWheels)
@@ -91,10 +91,13 @@ namespace Assets.Scripts.CarSystems
             _landingAudioClip2 = _cacheManager.GetAudioClip("vlanding");
 
             _ready = true;
+            UpdateManager.Instance.AddFixedUpdateable(this);
         }
 
         public void Destroy()
         {
+            UpdateManager.Instance.RemoveFixedUpdateable(this);
+
             if (_surfaceAudioSource != null)
             {
                 Object.Destroy(_surfaceAudioSource);

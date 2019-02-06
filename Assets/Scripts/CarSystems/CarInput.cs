@@ -4,18 +4,18 @@ using UnityEngine;
 
 namespace Assets.Scripts.CarSystems
 {
-    internal class CarInput : MonoBehaviour
+    internal class CarInput
     {
         private Car _car;
         private CarPhysics _movement;
 
-        private void Start()
+        public CarInput(Car car)
         {
-            _car = GetComponent<Car>();
+            _car = car;
             _movement = _car.Movement;
         }
-
-        private void Update()
+        
+        public void Update()
         {
             if (!CameraManager.Instance.IsMainCameraActive || !_car.Alive)
             {

@@ -288,9 +288,8 @@ namespace Assets.Scripts.System
                     {
                         int entityIndex = args.Dequeue().Value;
                         FSMEntity origoEntity = fsmRunner.FSM.EntityTable[entityIndex];
-                        GameObject entity = origoEntity.Object;
 
-                        Car car = entity.GetComponent<Car>();
+                        Car car = origoEntity.WorldEntity as Car;
                         if (car != null)
                         {
                             if (car.Arrived)

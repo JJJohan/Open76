@@ -40,7 +40,7 @@ namespace Assets.Scripts.System
             string sceneName = SceneManager.GetActiveScene().name;
             if (sceneName != "Level")
             {
-                AsyncOperation sceneLoad = SceneManager.LoadSceneAsync(1, LoadSceneMode.Single);
+                AsyncOperation sceneLoad = SceneManager.LoadSceneAsync("Level", LoadSceneMode.Single);
                 sceneLoad.allowSceneActivation = true;
                 while (!sceneLoad.isDone)
                 {
@@ -56,7 +56,7 @@ namespace Assets.Scripts.System
 
             _cacheManager.Palette = ActPaletteParser.ReadActPalette(mdef.PaletteFilePath);
             Texture2D surfaceTexture = TextureParser.ReadMapTexture(mdef.SurfaceTextureFilePath, _cacheManager.Palette, TextureFormat.RGB24, true, FilterMode.Point);
-            GameObject.Find("Sky").GetComponent<Sky>().TextureFilename = mdef.SkyTextureFilePath;
+            SceneRoot.Instance.Sky.TextureFilename = mdef.SkyTextureFilePath;
 
             GameObject worldGameObject = GameObject.Find("World");
             if (worldGameObject != null)
@@ -101,6 +101,7 @@ namespace Assets.Scripts.System
                     foreach (MsnMissionParser.Odef odef in mdef.TerrainPatches[x, z].Objects)
                     {
                         GameObject go = null;
+                        WorldEntity entity = null;
                         if (odef.ClassId == MsnMissionParser.ClassId.Car)
                         {
                             string lblUpper = odef.Label.ToUpper();
@@ -123,14 +124,15 @@ namespace Assets.Scripts.System
                                     go.tag = "Regen";
                                     break;
                                 default:
-                                    go = _cacheManager.ImportVcf(vcfName + ".vcf", odef.IsPlayer, out _);
-                                    Car car = go.GetComponent<Car>();
+                                    go = _cacheManager.ImportVcf(vcfName + ".vcf", odef.IsPlayer, out Car car, out _);
                                     car.TeamId = odef.TeamId;
                                     car.IsPlayer = odef.IsPlayer;
                                     if (car.IsPlayer)
                                     {
                                         Car.Player = car;
                                     }
+
+                                    entity = car;
                                     break;
                             }
 
@@ -141,7 +143,6 @@ namespace Assets.Scripts.System
                             if (odef.IsPlayer)
                             {
                                 CameraManager.Instance.MainCamera.GetComponent<SmoothFollow>().Target = go.transform;
-                                go.AddComponent<CarInput>();
                             }
                         }
                         else if (odef.ClassId != MsnMissionParser.ClassId.Special)
@@ -153,12 +154,13 @@ namespace Assets.Scripts.System
                             go = _cacheManager.ImportSdf(odef.Label + ".sdf", patchGameObject.transform, odef.LocalPosition, odef.LocalRotation, canWreck, out Sdf sdf, out GameObject wreckedPart);
                             if (odef.ClassId == MsnMissionParser.ClassId.Sign)
                             {
-                                go.AddComponent<Sign>();
+                                entity = EntityManager.Instance.CreateEntity<Sign>(go);
                             }
                             else if (canWreck)
                             {
-                                Building building = go.AddComponent<Building>();
+                                Building building = EntityManager.Instance.CreateEntity<Building>(go);
                                 building.Initialise(sdf, wreckedPart);
+                                entity = building;
                             }
                         }
 
@@ -173,14 +175,9 @@ namespace Assets.Scripts.System
                                 {
                                     if (entities[i].Value == odef.Label && entities[i].Id == odef.Id)
                                     {
-                                        WorldEntity worldEntity = go.GetComponent<WorldEntity>();
-                                        if (worldEntity != null)
-                                        {
-                                            entities[i].WorldEntity = worldEntity;
-                                            worldEntity.Id = i;
-                                        }
-                                        
+                                        entities[i].WorldEntity = entity;
                                         entities[i].Object = go;
+                                        entity.Id = i;
                                         break;
                                     }
                                 }
@@ -233,10 +230,15 @@ namespace Assets.Scripts.System
             RenderSettings.fogColor = _cacheManager.Palette[239];
             RenderSettings.ambientLight = _cacheManager.Palette[247];
 
-            List<Car> cars = EntityManager.Instance.Cars;
-            foreach (Car car in cars)
+            List<WorldEntity> worldEntities = EntityManager.Instance.Entities;
+            foreach (WorldEntity entity in worldEntities)
             {
-                car.transform.parent = null;
+                if (!(entity is Car))
+                {
+                    continue;
+                }
+
+                entity.Transform.parent = null;
             }
 
             if (mdef.FSM != null)
