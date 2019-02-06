@@ -115,7 +115,7 @@ namespace Assets.Scripts.Menus
 
         private void ShowMenu()
         {
-            Texture2D menuBackground = Mw2Parser.GetBackground(Mw2Parser.Background.AutoMeleeSinglePlayer);
+            Texture2D menuBackground = Mw2Parser.GetBackground(Mw2Parser.Background.Scenario);
 
             if (menuBackground == null)
             {

@@ -291,9 +291,7 @@ namespace Assets.Scripts.Menus
             {
                 return;
             }
-
-            VirtualFilesystem.Instance.ExtractAllMW2(@"C:\Users\admin\Desktop\i76files\mw2gog");
-
+            
             AddBackground(menuBackground, Screen.width / 2, Screen.height / 2);
 
             for (int i = 0; i < menuImages.Length; ++i)
