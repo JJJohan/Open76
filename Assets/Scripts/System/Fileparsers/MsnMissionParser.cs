@@ -7,10 +7,37 @@ namespace Assets.Scripts.System.Fileparsers
 {
     public class MsnMissionParser
     {
-        //public class TerrainData
-        //{
-        //    public void SetHeights(int x, int y, float[,] heights) { }
-        //}
+        // Unfortunately mission name <-> mission file pairs are stored in I76SHELL.DLL
+        // Hence the hardcoded list here.
+        public static readonly Dictionary<string, string> MultiplayerMissionLookup = new Dictionary<string, string>
+        {
+            {"The Crater", "m01.msn"},
+            {"Dunes", "m02.msn"},
+            {"Air Base", "m03.msn"},
+            {"Suburbia", "m04.msn"},
+            {"Slick Track", "m05.msn"},
+            {"Tombstone", "m06.msn"},
+            {"Hope Springs", "m07.msn"},
+            {"Creeper Canyon", "m08.msn"},
+            {"Mesa Maze", "m09.msn"},
+            {"Salt Flats", "m10.msn"},
+            {"Vigilantes' Paradise", "m11.msn"},
+            {"Night Driver", "m12.msn"},
+            {"Dodge", "m13.msn"},
+            {"Jorczak's Peak", "m14.msn"},
+            {"Lot of Asphalt", "m15.msn"}
+        };
+
+        public static readonly Dictionary<string, string> ScenarioMissionLookup = new Dictionary<string, string>
+        {
+            {"Oil Well Well", "s03.msn"},
+            {"Mondo Burger", "s02.msn"},
+            {"Seminole", "s04.msn"},
+            {"Pretty Bus", "s05.msn"},
+            {"Race No Shoot", "s06.msn"},
+            {"Trailer Pk. Madness", "s01.msn"},
+            {"Milk Toast", "s07.msn"}
+        };
 
         public enum ClassId : uint
         {
