@@ -37,6 +37,7 @@ namespace Assets.Scripts
         public string GamePath { get; set; }
         public bool IntroPlayed { get; set; }
         public string MapFileName { get; set; }
+        public string PlayerName { get; set; }
         public Font Font { get; private set; }
         
         public bool Paused
@@ -215,6 +216,7 @@ namespace Assets.Scripts
         {
             _objectives = new Dictionary<int, Objective>();
             _failMessages = new Dictionary<int, string>();
+            PlayerName = "Unnamed";
 
             Font = Resources.Load<Font>("Fonts/LEE_____");
 
