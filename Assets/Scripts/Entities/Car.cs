@@ -83,6 +83,11 @@ namespace Assets.Scripts.Entities
             }
         }
 
+        public override int Health
+        {
+            get { return GetComponentHealth(SystemType.Vehicle); }
+        }
+
         private int GetComponentHealth(SystemType healthType)
         {
             return _vehicleHitPoints[(int)healthType];

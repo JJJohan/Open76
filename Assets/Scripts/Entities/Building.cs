@@ -12,8 +12,12 @@ namespace Assets.Scripts.Entities
 
         public override bool Alive
         {
-            // TODO: implement damage etc.
             get { return _health > 0; }
+        }
+
+        public override int Health
+        {
+            get { return _health; }
         }
 
         public Building(GameObject gameObject) : base(gameObject)

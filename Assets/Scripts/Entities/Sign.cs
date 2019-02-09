@@ -9,6 +9,11 @@ namespace Assets.Scripts.Entities
         private MeshCollider[] _colliders;
         private Trigger _trigger;
 
+        public override int Health
+        {
+            get { return _dead ? 0 : 1; }
+        }
+
         public override bool Alive
         {
             get { return !_dead; }

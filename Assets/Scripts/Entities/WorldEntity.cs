@@ -23,6 +23,7 @@ namespace Assets.Scripts.Entities
         }
 
         public abstract bool Alive { get; }
+        public abstract int Health { get; }
         public int MaxAttackers { get; set; }
         public Transform Transform { get; private set; }
         public GameObject GameObject { get; private set; }
