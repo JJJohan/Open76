@@ -117,6 +117,17 @@ namespace Assets.Scripts
             objective.Revealed = true;
         }
 
+        public void CompleteObjective(int objectiveIndex)
+        {
+            if (!_objectives.TryGetValue(objectiveIndex, out Objective objective))
+            {
+                Debug.LogError($"Tried to complete objective at index '{objectiveIndex}', but no objective exists at this index.");
+                return;
+            }
+
+            objective.Completed = true;
+        }
+
         private void ParseObjectives(string objectiveFilePath)
         {
             if (!VirtualFilesystem.Instance.FileExists(objectiveFilePath))

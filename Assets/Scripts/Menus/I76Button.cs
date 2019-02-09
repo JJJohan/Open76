@@ -64,7 +64,7 @@ namespace Assets.Scripts.Menus
             _buttonImage.sprite = _normalSprite;
         }
 
-        private void Update()
+        private void LateUpdate()
         {
             if (!_activated || !Blocked)
             {

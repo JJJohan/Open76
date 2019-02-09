@@ -151,6 +151,13 @@ namespace Assets.Scripts.System
                                             odef.ClassId == MsnMissionParser.ClassId.Ramp ||
                                             odef.ClassId == MsnMissionParser.ClassId.Struct2;
 
+                            string fileName = odef.Label + ".sdf";
+                            if (!VirtualFilesystem.Instance.FileExists(fileName))
+                            {
+                                Debug.LogWarning($"Could not load '{fileName}', it does not exist.");
+                                continue;
+                            }
+
                             go = _cacheManager.ImportSdf(odef.Label + ".sdf", patchGameObject.transform, odef.LocalPosition, odef.LocalRotation, canWreck, out Sdf sdf, out GameObject wreckedPart);
                             if (odef.ClassId == MsnMissionParser.ClassId.Sign)
                             {
