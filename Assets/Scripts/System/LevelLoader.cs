@@ -182,6 +182,11 @@ namespace Assets.Scripts.System
                                 {
                                     if (entities[i].Value == odef.Label && entities[i].Id == odef.Id)
                                     {
+                                        if (entity == null)
+                                        {
+                                            entity = new WorldEntity(go);
+                                        }
+
                                         entities[i].WorldEntity = entity;
                                         entities[i].Object = go;
                                         entity.Id = i;
