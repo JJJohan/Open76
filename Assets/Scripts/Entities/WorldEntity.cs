@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.Entities
 {
-    public abstract class WorldEntity
+    public class WorldEntity
     {
         private int _id;
 
@@ -22,8 +22,15 @@ namespace Assets.Scripts.Entities
             }
         }
 
-        public abstract bool Alive { get; }
-        public abstract int Health { get; }
+        public virtual bool Alive
+        {
+            get { return false; }
+        }
+        public virtual int Health
+        {
+            get { return 0; }
+        }
+
         public int MaxAttackers { get; set; }
         public Transform Transform { get; private set; }
         public GameObject GameObject { get; private set; }
