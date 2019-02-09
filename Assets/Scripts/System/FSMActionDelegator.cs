@@ -132,13 +132,38 @@ namespace Assets.Scripts.System
                         int watchTarget = args.Dequeue().Value;
 
                         FSMPath path = fsmRunner.FSM.Paths[pathIndex];
-
                         Vector3 nodePos = path.GetWorldPosition(0);
                         nodePos.y = Utils.GroundHeightAtPoint(nodePos.x, nodePos.z) + height * 0.01f;
-                        camera.transform.position = nodePos;
 
                         GameObject entity = fsmRunner.FSM.EntityTable[watchTarget].Object;
+                        camera.transform.position = nodePos;
                         camera.transform.LookAt(entity.transform, Vector3.up);
+                    }
+                    break;
+                case "camPosDir":
+                    {
+                        if (CameraManager.Instance.IsMainCameraActive)
+                        {
+                            break;
+                        }
+
+                        UnityEngine.Camera camera = CameraManager.Instance.ActiveCamera;
+                        int pathIndex = args.Dequeue().Value;
+                        int height = args.Dequeue().Value;
+                        int posX = args.Dequeue().Value;
+                        int posY = args.Dequeue().Value;
+                        int posZ = args.Dequeue().Value;
+
+                        FSMPath path = fsmRunner.FSM.Paths[pathIndex];
+                        Vector3 nodePos = path.GetWorldPosition(0);
+                        nodePos.y = Utils.GroundHeightAtPoint(nodePos.x, nodePos.z) + height * 0.01f;
+
+                        Transform world = GameObject.Find("World").transform;
+                        Vector3 worldPos = world.position;
+
+                        Vector3 lookPos = new Vector3(posX, posY, posZ);
+                        camera.transform.position = nodePos;
+                        camera.transform.forward = (-lookPos).normalized;
                     }
                     break;
                 case "camObjObj":
@@ -417,6 +442,15 @@ namespace Assets.Scripts.System
                         LogUnhandledEntity(actionName, entityIndex, entity, machine);
                     }
                     break;
+                case "hpLesser":
+                    {
+                        int entityIndex = args.Dequeue().Value;
+                        int unknown = args.Dequeue().Value;
+                        int healthTarget = args.Dequeue().Value;
+
+                        FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
+                        return entity.WorldEntity.Health < healthTarget ? 1 : 0;
+                    }
                 case "isDead":
                     {
                         int entityIndex = args.Dequeue().Value;
@@ -500,12 +534,25 @@ namespace Assets.Scripts.System
                         Game.Instance.RevealObjective(objIndex);
                     }
                     break;
+                case "success":
+                    {
+                        int objIndex = args.Dequeue().Value;
+                        Game.Instance.CompleteObjective(objIndex);
+                    }
+                    break;
                 case "startTimer":
                     int timerIndex = args.Dequeue().Value;
                     fsmRunner.Timers[timerIndex] = Time.unscaledTime;
                     break;
                 default:
-                    Debug.LogWarning("FSM action not implemented: " + actionName + " @ " + (machine.IP-1) + " - argument count: " + args.Count);
+                    int argCount = args.Count;
+                    string missingAction = $"FSM action not implemented: {actionName} @ {machine.IP - 1} - argument count: {argCount}";
+                    for (int i = 0; i < argCount; ++i)
+                    {
+                        missingAction += $"\n{i + 1}: {args.Dequeue().Value}";
+                    }
+
+                    Debug.LogWarning(missingAction);
                     break;
             }
 
