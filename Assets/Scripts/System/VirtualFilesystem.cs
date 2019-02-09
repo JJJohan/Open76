@@ -29,7 +29,7 @@ namespace Assets.Scripts.System
         private readonly Dictionary<string, ZFSFileInfo> _files = new Dictionary<string, ZFSFileInfo>();
 
         // ReSharper disable once InconsistentNaming
-        private class ZFSFileInfo
+        public class ZFSFileInfo
         {
             public string Filename { get; set; }
             public uint Offset { get; set; }
@@ -38,6 +38,7 @@ namespace Assets.Scripts.System
             public byte Compression { get; set; }
             public uint DecompressedLength { get; set; }
             public string ContainingPakFilename { get; set; }
+            public List<string> PixBundle { get; set; }
         }
 
         private VirtualFilesystem()
@@ -101,6 +102,8 @@ namespace Assets.Scripts.System
             {
                 using (FastBinaryReader sr = GetDataStream(pixFile))
                 {
+                    List<string> pixBundle = new List<string>();
+
                     string l = sr.ReadLine();
                     int numFiles = int.Parse(l);
                     for (int i = 0; i < numFiles; i++)
@@ -113,6 +116,8 @@ namespace Assets.Scripts.System
 
                         if (_files.ContainsKey(filename))
                             continue;
+
+                        pixBundle.Add(filename);
                         _files.Add(filename, new ZFSFileInfo
                         {
                             Filename = filename,
@@ -121,6 +126,8 @@ namespace Assets.Scripts.System
                             ContainingPakFilename = pixFile.Filename.Replace(".pix", ".pak")
                         });
                     }
+
+                    pixFile.PixBundle = pixBundle;
                 }
             }
         }
@@ -166,6 +173,11 @@ namespace Assets.Scripts.System
         public bool FileExists(string filename)
         {
             return _files.ContainsKey(filename.ToLower());
+        }
+
+        public bool TryGetFileInfo(string filename, out ZFSFileInfo fileInfo)
+        {
+            return _files.TryGetValue(filename.ToLower(), out fileInfo);
         }
 
         public AudioClip GetAudioClip(string filename)
@@ -214,7 +226,7 @@ namespace Assets.Scripts.System
             return null;
         }
         
-        private FastBinaryReader GetDataStream(ZFSFileInfo fileInfo)
+        public FastBinaryReader GetDataStream(ZFSFileInfo fileInfo)
         {
             ZFSFileInfo originalFile = null;
             if (fileInfo.ContainingPakFilename != null)

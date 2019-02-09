@@ -69,7 +69,7 @@ namespace Assets.Scripts.CarSystems.Components
                 MeshRenderer renderer = obj.GetComponent<MeshRenderer>();
                 if (meshCacheEntry.Materials != null && meshCacheEntry.Materials.Length > 0)
                 {
-                    renderer.materials = meshCacheEntry.Materials;
+                    renderer.materials = meshCacheEntry.Materials[0];
                 }
                 else
                 {
