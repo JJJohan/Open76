@@ -33,7 +33,8 @@ namespace Assets.Scripts.System
             "51SPC3",
             "51SYS3",
             "51WEP3",
-            "51RTC1"
+            "51RTC1",
+            "SWHL" // Steering wheel, not animated yet
         };
 
         private static CacheManager _instance;
@@ -170,7 +171,7 @@ namespace Assets.Scripts.System
             return material;
         }
 
-        private void AddMaterial(GeoFace geoFace, string textureName, Vtf vtf, int textureGroup, bool unlit, Dictionary<string, List<GeoFace>> facesGroupedByMaterial, Dictionary<string, List<Material>> materialGroups)
+        private void AddMaterial(GeoFace geoFace, string textureName, Vtf vtf, int textureGroup, bool unlit, Dictionary<string, List<GeoFace>> facesGroupedByMaterial, Dictionary<string, HashSet<Material>> materialGroups)
         {
             Material material;
 
@@ -192,6 +193,7 @@ namespace Assets.Scripts.System
                         if (vtf.Tmts.TryGetValue(key, out Tmt tmt))
                         {
                             textureName = tmt.TextureNames[textureGroup];
+                            materialGroupName = textureName;
                         }
                     }
                 }
@@ -204,13 +206,16 @@ namespace Assets.Scripts.System
                 materialGroupName = textureName;
             }
 
-            if (materialGroups.TryGetValue(materialGroupName, out List<Material> materialGroup))
+            if (materialGroups.TryGetValue(materialGroupName, out HashSet<Material> materialGroup))
             {
-                materialGroup.Add(material);
+                if (!materialGroup.Contains(material))
+                {
+                    materialGroup.Add(material);
+                }
             }
             else
             {
-                materialGroups.Add(materialGroupName, new List<Material>
+                materialGroups.Add(materialGroupName, new HashSet<Material>
                 {
                     material
                 });
@@ -256,7 +261,7 @@ namespace Assets.Scripts.System
             List<Vector3> normals = new List<Vector3>();
             
             Dictionary<string, List<GeoFace>> facesGroupedByMaterial = new Dictionary<string, List<GeoFace>>();
-            Dictionary<string, List<Material>> materialGroups = new Dictionary<string, List<Material>>();
+            Dictionary<string, HashSet<Material>> materialGroups = new Dictionary<string, HashSet<Material>>();
 
             GeoFace[] faces = geoMesh.Faces;
             for (int i = 0; i < faces.Length; ++i)
@@ -295,7 +300,7 @@ namespace Assets.Scripts.System
             Dictionary<Material, List<int>> submeshTriangles = new Dictionary<Material, List<int>>();
             foreach (KeyValuePair<string, List<GeoFace>> faceGroup in facesGroupedByMaterial)
             {
-                Material firstMaterial = materialGroups[faceGroup.Key][0];
+                Material firstMaterial = materialGroups[faceGroup.Key].First();
                 submeshTriangles[firstMaterial] = new List<int>();
                 List<GeoFace> faceGroupValues = faceGroup.Value;
                 foreach (GeoFace face in faceGroupValues)
@@ -327,12 +332,36 @@ namespace Assets.Scripts.System
             }
             mesh.RecalculateBounds();
 
-            Material[][] matGroups;
-            matGroups = new Material[facesGroupedByMaterial.Count][];
+            int maxFrames = 0;
+            int groupCount = materialGroups.Count;
+            Material[][] materialSubGroups = new Material[groupCount][];
             int groupIndex = 0;
-            foreach (string key in facesGroupedByMaterial.Keys)
+            foreach (HashSet<Material> materialGroup in materialGroups.Values)
             {
-                matGroups[groupIndex++] = materialGroups[key].ToArray();
+                materialSubGroups[groupIndex++] = materialGroup.ToArray();
+                if (materialGroup.Count > maxFrames)
+                {
+                    maxFrames = materialGroup.Count;
+                }
+            }
+            
+            Material[][] matGroups = new Material[maxFrames][];
+            for (int i = 0; i < maxFrames; ++i)
+            {
+                matGroups[i] = new Material[groupCount];
+            }
+            
+            for (int i = 0; i < maxFrames; ++i)
+            {
+                for (int j = 0; j < groupCount; ++j)
+                {
+                    if (materialSubGroups[j].Length <= i)
+                    {
+                        continue;
+                    }
+
+                    matGroups[i][j] = materialSubGroups[j][i];
+                }
             }
 
             cacheEntry = new GeoMeshCacheEntry
@@ -346,7 +375,7 @@ namespace Assets.Scripts.System
             return cacheEntry;
         }
 
-        public GameObject ImportGeo(string filename, Vtf vtf, GameObject prefab, int textureGroup, int frameCount, bool unlit)
+        public GameObject ImportGeo(string filename, Vtf vtf, GameObject prefab, int textureGroup, int frameCount, bool unlit, bool autoAnimate)
         {
             GeoMeshCacheEntry meshCacheEntry = ImportMesh(filename, vtf, textureGroup, frameCount, unlit);
 
@@ -360,14 +389,10 @@ namespace Assets.Scripts.System
                 meshFilter.sharedMesh = meshCacheEntry.Mesh;
                 MeshRenderer meshRenderer = obj.GetComponent<MeshRenderer>();
                 meshRenderer.materials = meshCacheEntry.Materials[0];
-                
-                for (int i = 0; i < meshCacheEntry.Materials.Length; ++i)
+
+                if (autoAnimate && meshCacheEntry.Materials.Length > 1)
                 {
-                    if (meshCacheEntry.Materials[i].Length > 1)
-                    {
-                        AnimatedTexture.AnimateObject(obj, meshCacheEntry.Materials, meshRenderer);
-                        break;
-                    }
+                    AnimatedTexture.AnimateObject(obj, meshCacheEntry.Materials, meshRenderer);
                 }
             }
             MeshCollider collider = obj.GetComponent<MeshCollider>();
@@ -395,7 +420,7 @@ namespace Assets.Scripts.System
             return false;
         }
 
-        private GameObject LoadGeometryDefinition(GeometryDefinition geometryDefinition, Transform parent, bool collider, int frameCount, bool unlit)
+        private GameObject LoadGeometryDefinition(GeometryDefinition geometryDefinition, Transform parent, bool collider, int frameCount, bool unlit, bool autoAnimate)
         {
             string geoFilename = geometryDefinition.Name + ".geo";
             if (!VirtualFilesystem.Instance.FileExists(geoFilename))
@@ -404,7 +429,7 @@ namespace Assets.Scripts.System
                 return null;
             }
 
-            GameObject partObj = ImportGeo(geoFilename, null, collider ? _3DObjectPrefab : _noColliderPrefab, 0, frameCount, unlit);
+            GameObject partObj = ImportGeo(geoFilename, null, collider ? _3DObjectPrefab : _noColliderPrefab, 0, frameCount, unlit, autoAnimate);
             partObj.transform.parent = parent;
             partObj.transform.localPosition = geometryDefinition.Position;
             partObj.transform.localRotation = Quaternion.identity;
@@ -433,7 +458,7 @@ namespace Assets.Scripts.System
             for (int i = 0; i < parts.Length; ++i)
             {
                 GeometryDefinition part = parts[i];
-                GameObject partObj = LoadGeometryDefinition(part, partDict[part.ParentName].transform, false, xdf.Frames, true);
+                GameObject partObj = LoadGeometryDefinition(part, partDict[part.ParentName].transform, false, xdf.Frames, true, true);
                 if (partObj == null)
                 {
                     continue;
@@ -466,7 +491,7 @@ namespace Assets.Scripts.System
 
             foreach (GeometryDefinition sdfPart in sdf.Parts)
             {
-                GameObject partObj = LoadGeometryDefinition(sdfPart, partDict[sdfPart.ParentName].transform, true, 1, false);
+                GameObject partObj = LoadGeometryDefinition(sdfPart, partDict[sdfPart.ParentName].transform, true, 1, false, true);
                 if (partObj == null)
                 {
                     continue;
@@ -478,7 +503,7 @@ namespace Assets.Scripts.System
 
             if (canWreck && sdf.WreckedPart != null)
             {
-                wreckedPart = LoadGeometryDefinition(sdf.WreckedPart, partDict[sdf.WreckedPart.ParentName].transform, true, 1, false);
+                wreckedPart = LoadGeometryDefinition(sdf.WreckedPart, partDict[sdf.WreckedPart.ParentName].transform, true, 1, false, true);
                 if (wreckedPart != null)
                 {
                     wreckedPart.SetActive(false);
@@ -701,7 +726,7 @@ namespace Assets.Scripts.System
                 return;
             }
 
-            GameObject partObj = ImportGeo(geoFilename, vtf, prefab, textureGroup, 1, false);
+            GameObject partObj = ImportGeo(geoFilename, vtf, prefab, textureGroup, 1, false, false);
             
             Transform partTransform = partObj.transform;
             if (!forgetParentPosition)

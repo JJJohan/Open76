@@ -34,7 +34,7 @@ namespace Assets.Scripts.System.Fileparsers
     {
         public static GeoMesh ReadGeoMesh(string fileName)
         {
-            using (Scripts.System.FastBinaryReader br = VirtualFilesystem.Instance.GetFileStream(fileName))
+            using (FastBinaryReader br = VirtualFilesystem.Instance.GetFileStream(fileName))
             {
                 GeoMesh mesh = new GeoMesh();
                 string magic = br.ReadCString(4);

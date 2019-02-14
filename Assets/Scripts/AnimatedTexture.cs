@@ -19,8 +19,8 @@ public class AnimatedTexture : IFixedUpdateable
     private AnimatedTexture(GameObject gameObject, Material[][] materialGroups, MeshRenderer meshRenderer)
     {
         _materialGroups = materialGroups;
-        _frameIndices = new int[_materialGroups.Length];
-        _activeMaterials = new Material[_materialGroups.Length];
+        _frameIndices = new int[_materialGroups[0].Length];
+        _activeMaterials = new Material[_materialGroups[0].Length];
         _meshRenderer = meshRenderer;
         UpdateManager.Instance.AddFixedUpdateable(this);
 
@@ -44,10 +44,14 @@ public class AnimatedTexture : IFixedUpdateable
             return;
         }
 
-        for (int i = 0; i < _frameIndices.Length; ++i)
+        for (int i = 0; i < _activeMaterials.Length; ++i)
         {
-            _frameIndices[i] = (_frameIndices[i] + 1) % _materialGroups[i].Length;
-            _activeMaterials[i] = _materialGroups[i][_frameIndices[i]];
+            _frameIndices[i] = (_frameIndices[i] + 1) % _materialGroups.Length;
+            Material material = _materialGroups[_frameIndices[i]][i];
+            if (material != null)
+            {
+                _activeMaterials[i] = material;
+            }
         }
 
         _currentTime -= FrameRate;
