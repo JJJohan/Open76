@@ -116,6 +116,7 @@ namespace Assets.Scripts
         {
             Sky.Destroy();
             _game.Destroy();
+            CameraManager.Instance.Destroy();
             EntityManager.Instance.Destroy();
             FSMRunner.Instance.Destroy();
             UpdateManager.Instance.Destroy();

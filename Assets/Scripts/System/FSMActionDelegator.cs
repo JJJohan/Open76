@@ -140,6 +140,24 @@ namespace Assets.Scripts.System
                         camera.transform.LookAt(entity.transform, Vector3.up);
                     }
                     break;
+                case "camTransObj":
+                    {
+                        if (CameraManager.Instance.IsMainCameraActive)
+                        {
+                            break;
+                        }
+
+                        int pathIndex = args.Dequeue().Value;
+                        int startHeight = args.Dequeue().Value;
+                        int endHeight = args.Dequeue().Value;
+                        int watchTarget = args.Dequeue().Value;
+
+                        FSMPath path = fsmRunner.FSM.Paths[pathIndex];
+                        GameObject watchObject = fsmRunner.FSM.EntityTable[watchTarget].Object;
+
+                        CameraManager.Instance.Transition(startHeight, endHeight, path, watchObject.transform);
+                    }
+                    break;
                 case "camPosDir":
                     {
                         if (CameraManager.Instance.IsMainCameraActive)
@@ -184,7 +202,7 @@ namespace Assets.Scripts.System
 
                         UnityEngine.Camera camera = CameraManager.Instance.ActiveCamera;
                         camera.transform.SetParent(anchorEntity.Object.transform);
-                        camera.transform.localPosition = new Vector3(xPos * 0.01f, zPos * 0.01f, yPos * 0.01f);
+                        camera.transform.localPosition = new Vector3(xPos * 0.01f, yPos * 0.01f, zPos * 0.01f);
                         camera.transform.LookAt(targetEntity.Object.transform, Vector3.up);
                     }
                     break;
@@ -207,6 +225,8 @@ namespace Assets.Scripts.System
                         LogUnhandledEntity(actionName, entityIndex, entity, machine);
                     }
                     break;
+                case "camIsArrived":
+                    return CameraManager.Instance.CamArrived() ? 1 : 0;
                 case "isWithinNav":
                     {
                         int pathIndex = args.Dequeue().Value;

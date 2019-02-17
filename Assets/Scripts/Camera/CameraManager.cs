@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Assets.Scripts.System;
 using UnityEngine;
 
 namespace Assets.Scripts.Camera
@@ -8,6 +9,8 @@ namespace Assets.Scripts.Camera
         private readonly Stack<UnityEngine.Camera> _cameraStack;
         private readonly GameObject _mainCameraObject;
         private bool _audioEnabled;
+        private UnityEngine.Camera _transitionCamera;
+        private float _transitionPercent;
 
         public UnityEngine.Camera MainCamera
         {
@@ -86,6 +89,34 @@ namespace Assets.Scripts.Camera
             _cameraStack.Push(newCamera);
         }
 
+        public void Transition(float startHeight, float endHeight, FSMPath path, Transform watchTarget)
+        {
+            if (ActiveCamera != _transitionCamera)
+            {
+                _transitionCamera = ActiveCamera;
+                _transitionPercent = 0f;
+            }
+            else
+            {
+                _transitionPercent += Time.deltaTime * 0.1f; // Hardcoded 10 second transition at the moment.
+            }
+
+            Vector3 startPos = path.GetWorldPosition(0);
+            Vector3 endPos = path.GetWorldPosition(1);
+            Vector3 targetPos = Vector3.Lerp(startPos, endPos, _transitionPercent);
+            float targetHeight = Mathf.Lerp(startHeight, endHeight, _transitionPercent) * 0.01f;
+            targetPos.y = Utils.GroundHeightAtPoint(targetPos.x, targetPos.z) + targetHeight;
+
+            Transform camTransform = _transitionCamera.transform;
+            camTransform.position = targetPos;
+            camTransform.LookAt(watchTarget, Vector3.up);
+        }
+
+        public bool CamArrived()
+        {
+            return _transitionPercent >= 1.0f - float.Epsilon;
+        }
+
         public void PopCamera()
         {
             if (_cameraStack.Count == 0)
@@ -95,13 +126,10 @@ namespace Assets.Scripts.Camera
 
             UnityEngine.Camera stackCamera = _cameraStack.Pop();
             Object.Destroy(stackCamera.gameObject);
-
-            if (_cameraStack.Count > 0)
-            {
-                UnityEngine.Camera camera = _cameraStack.Peek();
-                camera.enabled = true;
-                camera.GetComponent<AudioListener>().enabled = _audioEnabled;
-            }
+            
+            UnityEngine.Camera camera = _cameraStack.Peek();
+            camera.enabled = true;
+            camera.GetComponent<AudioListener>().enabled = _audioEnabled;
         }
 
         public void Destroy()
@@ -109,7 +137,10 @@ namespace Assets.Scripts.Camera
             while (_cameraStack.Count > 0)
             {
                 UnityEngine.Camera stackCamera = _cameraStack.Pop();
-                Object.Destroy(stackCamera.gameObject);
+                if (stackCamera != null)
+                {
+                    Object.Destroy(stackCamera.gameObject);
+                }
             }
 
             _instance = null;
